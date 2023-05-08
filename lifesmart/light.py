@@ -70,13 +70,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(devices)
 
 
-async def asyncPOST(url, data, headers):
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url, data=data, headers=headers) as response:
-            r = await response.text()
-            return r
-
-
 class LifeSmartLight(LifeSmartDevice, LightEntity):
     """Representation of a LifeSmartLight."""
 
@@ -171,9 +164,9 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
         if self._devtype not in SPOT_TYPES:
             return
         rmdata = {}
-        rmlist = await LifeSmartLight._lifesmart_GetRemoteList(self)
+        rmlist = await self._client.get_ir_remote_list_async(self._agt)
         for ai in rmlist:
-            rms = await LifeSmartLight._lifesmart_GetRemotes(self, ai)
+            rms = await self._client.get_ir_remote_async(self._agt, ai)
             rms["category"] = rmlist[ai]["category"]
             rms["brand"] = rmlist[ai]["brand"]
             rmdata[ai] = rms
@@ -351,96 +344,3 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
     def unique_id(self):
         """A unique identifier for this entity."""
         return self.entity_id
-
-    @staticmethod
-    async def _lifesmart_GetRemoteList(self):
-        appkey = self._appkey
-        apptoken = self._apptoken
-        usertoken = self._usertoken
-        userid = self._userid
-        agt = self._agt
-        url = "https://api.us.ilifesmart.com/app/irapi.GetRemoteList"
-        tick = int(time.time())
-        sdata = (
-            "method:GetRemoteList,agt:"
-            + agt
-            + ",time:"
-            + str(tick)
-            + ",userid:"
-            + userid
-            + ",usertoken:"
-            + usertoken
-            + ",appkey:"
-            + appkey
-            + ",apptoken:"
-            + apptoken
-        )
-        sign = hashlib.md5(sdata.encode(encoding="UTF-8")).hexdigest()
-        send_values = {
-            "id": 1,
-            "method": "GetRemoteList",
-            "params": {"agt": agt},
-            "system": {
-                "ver": "1.0",
-                "lang": "en",
-                "userid": userid,
-                "appkey": appkey,
-                "time": tick,
-                "sign": sign,
-            },
-        }
-        header = {"Content-Type": "application/json"}
-        send_data = json.dumps(send_values)
-        _LOGGER.info("_lifesmart_GetRemoteList send_data -- " + str(send_data))
-        # req = urllib.request.Request(url=url, data=send_data.encode('utf-8'), headers=header, method='POST')
-        # response = json.loads(urllib.request.urlopen(req).read().decode('utf-8'))
-        response = json.loads(await asyncPOST(url, send_data, header))
-        # _LOGGER.info("_lifesmart_GetRemoteList -- " + str(response))
-        return response["message"]
-
-    @staticmethod
-    async def _lifesmart_GetRemotes(self, ai):
-        appkey = self._appkey
-        apptoken = self._apptoken
-        usertoken = self._usertoken
-        userid = self._userid
-        agt = self._agt
-        url = "https://api.us.ilifesmart.com/app/irapi.GetRemote"
-        tick = int(time.time())
-        sdata = (
-            "method:GetRemote,agt:"
-            + agt
-            + ",ai:"
-            + ai
-            + ",needKeys:2,time:"
-            + str(tick)
-            + ",userid:"
-            + userid
-            + ",usertoken:"
-            + usertoken
-            + ",appkey:"
-            + appkey
-            + ",apptoken:"
-            + apptoken
-        )
-        sign = hashlib.md5(sdata.encode(encoding="UTF-8")).hexdigest()
-        send_values = {
-            "id": 1,
-            "method": "GetRemote",
-            "params": {"agt": agt, "ai": ai, "needKeys": 2},
-            "system": {
-                "ver": "1.0",
-                "lang": "en",
-                "userid": userid,
-                "appkey": appkey,
-                "time": tick,
-                "sign": sign,
-            },
-        }
-        header = {"Content-Type": "application/json"}
-        send_data = json.dumps(send_values)
-        # req = urllib.request.Request(url=url, data=send_data.encode('utf-8'), headers=header, method='POST')
-        # response = json.loads(urllib.request.urlopen(req).read().decode('utf-8'))
-        response = json.loads(await asyncPOST(url, send_data, header))
-        # _LOGGER.info("_lifesmart_GetRemotes -- " + str(response))
-        return response["message"]["codes"]

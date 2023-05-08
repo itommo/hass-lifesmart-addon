@@ -8,6 +8,7 @@ import datetime
 import hashlib
 import logging
 import threading
+from lifesmart.lifesmart_client import LifeSmartClient
 import websocket
 import asyncio
 import struct
@@ -50,6 +51,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
+from homeassistnat.const import CONF_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -161,340 +163,6 @@ DOMAIN = "lifesmart"
 
 LifeSmart_STATE_MANAGER = "lifesmart_wss"
 
-
-async def asyncPOST(url, data, headers):
-    async with aiohttp.ClientSession() as session:
-        async with session.post(url, data=data, headers=headers) as response:
-            r = await response.text()
-            return r
-
-
-async def asycn_lifesmart_EpGetAll(appkey, apptoken, usertoken, userid):
-    url = "https://api.us.ilifesmart.com/app/api.EpGetAll"
-    tick = int(time.time())
-    sdata = (
-        "method:EpGetAll,time:"
-        + str(tick)
-        + ",userid:"
-        + userid
-        + ",usertoken:"
-        + usertoken
-        + ",appkey:"
-        + appkey
-        + ",apptoken:"
-        + apptoken
-    )
-    sign = hashlib.md5(sdata.encode(encoding="UTF-8")).hexdigest()
-    send_values = {
-        "id": 1,
-        "method": "EpGetAll",
-        "system": {
-            "ver": "1.0",
-            "lang": "en",
-            "userid": userid,
-            "appkey": appkey,
-            "time": tick,
-            "sign": sign,
-        },
-    }
-    header = {"Content-Type": "application/json"}
-    send_data = json.dumps(send_values)
-    # req = urllib.request.Request(
-    #     url=url, data=send_data.encode("utf-8"), headers=header, method="POST"
-    # )
-    # response = json.loads(urllib.request.urlopen(req).read().decode("utf-8"))
-    response = json.loads(await asyncPOST(url, send_data, header))
-    if response["code"] == 0:
-        return response["message"]
-    return False
-
-async def asycn_lifesmart_SceneGet(appkey, apptoken, usertoken, userid, agt):
-    url = "https://api.us.ilifesmart.com/app/api.SceneGet"
-    tick = int(time.time())
-    sdata = (
-        "method:SceneGet,agt:"
-        + agt
-        + ",time:"
-        + str(tick)
-        + ",userid:"
-        + userid
-        + ",usertoken:"
-        + usertoken
-        + ",appkey:"
-        + appkey
-        + ",apptoken:"
-        + apptoken
-    )
-    sign = hashlib.md5(sdata.encode(encoding="UTF-8")).hexdigest()
-    send_values = {
-        "id": 1,
-        "method": "SceneGet",
-        "params": {
-            "agt": agt,
-        },
-        "system": {
-            "ver": "1.0",
-            "lang": "en",
-            "userid": userid,
-            "appkey": appkey,
-            "time": tick,
-            "sign": sign,
-        },    
-    }
-    header = {"Content-Type": "application/json"}
-    send_data = json.dumps(send_values)
-    # req = urllib.request.Request(
-    #     url=url, data=send_data.encode("utf-8"), headers=header, method="POST"
-    # )
-    # response = json.loads(urllib.request.urlopen(req).read().decode("utf-8"))
-    response = json.loads(await asyncPOST(url, send_data, header))
-    if response["code"] == 0:
-        return response["message"]
-    return False
-
-def lifesmart_EpGetAll(hass, appkey, apptoken, usertoken, userid):
-    url = "https://api.us.ilifesmart.com/app/api.EpGetAll"
-    tick = int(time.time())
-    sdata = (
-        "method:EpGetAll,time:"
-        + str(tick)
-        + ",userid:"
-        + userid
-        + ",usertoken:"
-        + usertoken
-        + ",appkey:"
-        + appkey
-        + ",apptoken:"
-        + apptoken
-    )
-    sign = hashlib.md5(sdata.encode(encoding="UTF-8")).hexdigest()
-    send_values = {
-        "id": 1,
-        "method": "EpGetAll",
-        "system": {
-            "ver": "1.0",
-            "lang": "en",
-            "userid": userid,
-            "appkey": appkey,
-            "time": tick,
-            "sign": sign,
-        },
-    }
-    header = {"Content-Type": "application/json"}
-    send_data = json.dumps(send_values)
-    req = urllib.request.Request(
-        url=url, data=send_data.encode("utf-8"), headers=header, method="POST"
-    )
-    response = json.loads(
-        hass.async_add_executor_job(urllib.request.urlopen(req).read().decode("utf-8"))
-    )
-    # response = json.loads(await asyncPOST(url, send_data, header))
-    if response["code"] == 0:
-        return response["message"]
-    return False
-
-
-def lifesmart_Sendkeys(
-    appkey, apptoken, usertoken, userid, agt, ai, me, category, brand, keys
-):
-    url = "https://api.us.ilifesmart.com/app/irapi.SendKeys"
-    tick = int(time.time())
-    # keys = str(keys)
-    sdata = (
-        "method:SendKeys,agt:"
-        + agt
-        + ",ai:"
-        + ai
-        + ",brand:"
-        + brand
-        + ",category:"
-        + category
-        + ",keys:"
-        + keys
-        + ",me:"
-        + me
-        + ",time:"
-        + str(tick)
-        + ",userid:"
-        + userid
-        + ",usertoken:"
-        + usertoken
-        + ",appkey:"
-        + appkey
-        + ",apptoken:"
-        + apptoken
-    )
-    sign = hashlib.md5(sdata.encode(encoding="UTF-8")).hexdigest()
-    _LOGGER.debug("sendkey: %s", str(sdata))
-    send_values = {
-        "id": 1,
-        "method": "SendKeys",
-        "params": {
-            "agt": agt,
-            "me": me,
-            "category": category,
-            "brand": brand,
-            "ai": ai,
-            "keys": keys,
-        },
-        "system": {
-            "ver": "1.0",
-            "lang": "en",
-            "userid": userid,
-            "appkey": appkey,
-            "time": tick,
-            "sign": sign,
-        },
-    }
-    header = {"Content-Type": "application/json"}
-    send_data = json.dumps(send_values)
-    req = urllib.request.Request(
-        url=url, data=send_data.encode("utf-8"), headers=header, method="POST"
-    )
-    response = json.loads(urllib.request.urlopen(req).read().decode("utf-8"))
-    _LOGGER.debug("sendkey_res: %s", str(response))
-    return response
-
-
-def lifesmart_Sendackeys(
-    appkey,
-    apptoken,
-    usertoken,
-    userid,
-    agt,
-    ai,
-    me,
-    category,
-    brand,
-    keys,
-    power,
-    mode,
-    temp,
-    wind,
-    swing,
-):
-    url = "https://api.us.ilifesmart.com/app/irapi.SendACKeys"
-    tick = int(time.time())
-    # keys = str(keys)
-    sdata = (
-        "method:SendACKeys,agt:"
-        + agt
-        + ",ai:"
-        + ai
-        + ",brand:"
-        + brand
-        + ",category:"
-        + category
-        + ",keys:"
-        + keys
-        + ",me:"
-        + me
-        + ",mode:"
-        + str(mode)
-        + ",power:"
-        + str(power)
-        + ",swing:"
-        + str(swing)
-        + ",temp:"
-        + str(temp)
-        + ",wind:"
-        + str(wind)
-        + ",time:"
-        + str(tick)
-        + ",userid:"
-        + userid
-        + ",usertoken:"
-        + usertoken
-        + ",appkey:"
-        + appkey
-        + ",apptoken:"
-        + apptoken
-    )
-    sign = hashlib.md5(sdata.encode(encoding="UTF-8")).hexdigest()
-    _LOGGER.debug("sendackey: %s", str(sdata))
-    send_values = {
-        "id": 1,
-        "method": "SendACKeys",
-        "params": {
-            "agt": agt,
-            "me": me,
-            "category": category,
-            "brand": brand,
-            "ai": ai,
-            "keys": keys,
-            "power": power,
-            "mode": mode,
-            "temp": temp,
-            "wind": wind,
-            "swing": swing,
-        },
-        "system": {
-            "ver": "1.0",
-            "lang": "en",
-            "userid": userid,
-            "appkey": appkey,
-            "time": tick,
-            "sign": sign,
-        },
-    }
-    header = {"Content-Type": "application/json"}
-    send_data = json.dumps(send_values)
-    req = urllib.request.Request(
-        url=url, data=send_data.encode("utf-8"), headers=header, method="POST"
-    )
-    response = json.loads(urllib.request.urlopen(req).read().decode("utf-8"))
-    _LOGGER.debug("sendackey_res: %s", str(response))
-    return response
-
-
-def lifesmart_SceneSet(appkey, apptoken, usertoken, userid, agt, id):
-    url = "https://api.us.ilifesmart.com/app/api.SceneSet"
-    tick = int(time.time())
-    # keys = str(keys)
-    sdata = (
-        "method:SceneSet,agt:"
-        + agt
-        + ",id:"
-        + id
-        + ",time:"
-        + str(tick)
-        + ",userid:"
-        + userid
-        + ",usertoken:"
-        + usertoken
-        + ",appkey:"
-        + appkey
-        + ",apptoken:"
-        + apptoken
-    )
-    sign = hashlib.md5(sdata.encode(encoding="UTF-8")).hexdigest()
-    _LOGGER.debug("SceneSet: %s", str(sdata))
-    send_values = {
-        "id": 101,
-        "method": "SceneSet",
-        "params": {
-            "agt": agt,
-            "id": id,
-        },
-        "system": {
-            "ver": "1.0",
-            "lang": "en",
-            "userid": userid,
-            "appkey": appkey,
-            "time": tick,
-            "sign": sign,
-        },
-    }
-    header = {"Content-Type": "application/json"}
-    send_data = json.dumps(send_values)
-    req = urllib.request.Request(
-        url=url, data=send_data.encode("utf-8"), headers=header, method="POST"
-    )
-    response = json.loads(urllib.request.urlopen(req).read().decode("utf-8"))
-    _LOGGER.debug("SceneSet_res: %s", str(response))
-    return response
-
-
 async def async_setup(hass, config):
     """Set up the lifesmart component."""
     param = {}
@@ -502,17 +170,19 @@ async def async_setup(hass, config):
     param["apptoken"] = config[DOMAIN][CONF_LIFESMART_APPTOKEN]
     param["usertoken"] = config[DOMAIN][CONF_LIFESMART_USERTOKEN]
     param["userid"] = config[DOMAIN][CONF_LIFESMART_USERID]
+    param["baseurl"] = config[DOMAIN][CONF_URL]
     exclude_items = config[DOMAIN][CONF_EXCLUDE_ITEMS]
     exclude_agts = config[DOMAIN][CONF_EXCLUDE_AGTS]
     ai_include_agts = config[DOMAIN][CONF_AI_INCLUDE_AGTS]
     ai_include_items = config[DOMAIN][CONF_AI_INCLUDE_ITEMS]
+    
+    client = LifeSmartClient(param["baseurl"], param["appkey"], param["apptoken"], param["usertoken"], param["userid"])
+    param["client"] = client
 
-    devices = await asycn_lifesmart_EpGetAll(
-        param["appkey"],
-        param["apptoken"],
-        param["usertoken"],
-        param["userid"],
-    )
+    
+
+    devices = await client.get_all_device_async()
+
     for dev in devices:
         if dev["me"] in exclude_items or dev["agt"] in exclude_agts:
             continue
@@ -553,13 +223,7 @@ async def async_setup(hass, config):
             )
 
     for agt in ai_include_agts:
-        scenes = await asycn_lifesmart_SceneGet(
-            param["appkey"],
-            param["apptoken"],
-            param["usertoken"],
-            param["userid"],
-            agt,
-        )
+        scenes = await client.get_all_scene_async(agt)
         for scene in scenes:
             if scene['id'] in ai_include_items:
                 devtype = "ai"
@@ -570,7 +234,7 @@ async def async_setup(hass, config):
                 )
                 
 
-    def send_keys(call):
+    async def send_keys(call):
         """Handle the service call."""
         agt = call.data["agt"]
         me = call.data["me"]
@@ -578,11 +242,7 @@ async def async_setup(hass, config):
         category = call.data["category"]
         brand = call.data["brand"]
         keys = call.data["keys"]
-        restkey = lifesmart_Sendkeys(
-            param["appkey"],
-            param["apptoken"],
-            param["usertoken"],
-            param["userid"],
+        restkey = await param["client"].send_ir_key_async(
             agt,
             ai,
             me,
@@ -592,7 +252,7 @@ async def async_setup(hass, config):
         )
         _LOGGER.debug("sendkey: %s", str(restkey))
 
-    def send_ackeys(call):
+    async def send_ackeys(call):
         """Handle the service call."""
         agt = call.data["agt"]
         me = call.data["me"]
@@ -605,11 +265,7 @@ async def async_setup(hass, config):
         temp = call.data["temp"]
         wind = call.data["wind"]
         swing = call.data["swing"]
-        restackey = lifesmart_Sendackeys(
-            param["appkey"],
-            param["apptoken"],
-            param["usertoken"],
-            param["userid"],
+        restackey = await param["client"].send_ir_ackey_async(
             agt,
             ai,
             me,
@@ -624,15 +280,11 @@ async def async_setup(hass, config):
         )
         _LOGGER.debug("sendkey: %s", str(restackey))
 
-    def scene_set(call):
+    async def scene_set_async(call):
         """Handle the service call."""
         agt = call.data["agt"]
         id = call.data["id"]
-        restkey = lifesmart_SceneSet(
-            param["appkey"],
-            param["apptoken"],
-            param["usertoken"],
-            param["userid"],
+        restkey = await param["client"].set_scene_async(
             agt,
             id,
         )
@@ -1017,31 +669,16 @@ async def async_setup(hass, config):
         )
 
     def on_open(ws):
+        client = param["client"]
         tick = int(time.time())
         sdata = (
-            "method:WbAuth,time:"
-            + str(tick)
-            + ",userid:"
-            + param["userid"]
-            + ",usertoken:"
-            + param["usertoken"]
-            + ",appkey:"
-            + param["appkey"]
-            + ",apptoken:"
-            + param["apptoken"]
+            "method:WbAuth,"
+            + client.generate_time_and_credential_data(tick)
         )
-        sign = hashlib.md5(sdata.encode(encoding="UTF-8")).hexdigest()
         send_values = {
             "id": 1,
             "method": "WbAuth",
-            "system": {
-                "ver": "1.0",
-                "lang": "en",
-                "userid": param["userid"],
-                "appkey": param["appkey"],
-                "time": tick,
-                "sign": sign,
-            },
+            "system": client.generate_system_request_body(tick, sdata),
         }
         header = {"Content-Type": "application/json"}
         send_data = json.dumps(send_values)
@@ -1050,10 +687,10 @@ async def async_setup(hass, config):
 
     hass.services.async_register(DOMAIN, "send_keys", send_keys)
     hass.services.async_register(DOMAIN, "send_ackeys", send_ackeys)
-    hass.services.async_register(DOMAIN, "scene_set", scene_set)
+    hass.services.async_register(DOMAIN, "scene_set", scene_set_async)
 
     ws = websocket.WebSocketApp(
-        "wss://api.us.ilifesmart.com:8443/wsapp/",
+        client.get_wss_url(),
         on_message=on_message,
         on_error=on_error,
         on_close=on_close,
@@ -1088,6 +725,7 @@ class LifeSmartDevice(Entity):
         self._me = dev["me"]
         self._idx = idx
         self._devtype = dev["devtype"]
+        self._client = param["client"]
         attrs = {
             "agt": self._agt,
             "me": self._me,
@@ -1121,270 +759,27 @@ class LifeSmartDevice(Entity):
         """check with the entity for an updated state."""
         return False
 
-    # @staticmethod
-    # def _lifesmart_epset(self, type, val, idx):
-    #     # self._tick = int(time.time())
-    #     url = "https://api.us.ilifesmart.com/app/api.EpSet"
-    #     tick = int(time.time())
-    #     appkey = self._appkey
-    #     apptoken = self._apptoken
-    #     userid = self._userid
-    #     usertoken = self._usertoken
-    #     agt = self._agt
-    #     me = self._me
-    #     sdata = (
-    #         "method:EpSet,agt:"
-    #         + agt
-    #         + ",idx:"
-    #         + idx
-    #         + ",me:"
-    #         + me
-    #         + ",type:"
-    #         + type
-    #         + ",val:"
-    #         + str(val)
-    #         + ",time:"
-    #         + str(tick)
-    #         + ",userid:"
-    #         + userid
-    #         + ",usertoken:"
-    #         + usertoken
-    #         + ",appkey:"
-    #         + appkey
-    #         + ",apptoken:"
-    #         + apptoken
-    #     )
-    #     sign = hashlib.md5(sdata.encode(encoding="UTF-8")).hexdigest()
-    #     send_values = {
-    #         "id": 1,
-    #         "method": "EpSet",
-    #         "system": {
-    #             "ver": "1.0",
-    #             "lang": "en",
-    #             "userid": userid,
-    #             "appkey": appkey,
-    #             "time": tick,
-    #             "sign": sign,
-    #         },
-    #         "params": {"agt": agt, "me": me, "idx": idx, "type": type, "val": val},
-    #     }
-    #     header = {"Content-Type": "application/json"}
-    #     send_data = json.dumps(send_values)
-    #     req = urllib.request.Request(
-    #         url=url, data=send_data.encode("utf-8"), headers=header, method="POST"
-    #     )
-    #     response = json.loads(urllib.request.urlopen(req).read().decode("utf-8"))
-    #     # response = json.loads(await asyncPOST(url, send_data, header))
-    #     _LOGGER.info("epset_send: %s", str(send_data))
-    #     _LOGGER.info("epset_res: %s", str(response))
-    #     return response["code"]
-
-    # @staticmethod
-    # def _lifesmart_epget(self):
-    #     url = "https://api.us.ilifesmart.com/app/api.EpGet"
-    #     tick = int(time.time())
-    #     appkey = self._appkey
-    #     apptoken = self._apptoken
-    #     userid = self._userid
-    #     usertoken = self._usertoken
-    #     agt = self._agt
-    #     me = self._me
-    #     sdata = (
-    #         "method:EpGet,agt:"
-    #         + agt
-    #         + ",me:"
-    #         + me
-    #         + ",time:"
-    #         + str(tick)
-    #         + ",userid:"
-    #         + userid
-    #         + ",usertoken:"
-    #         + usertoken
-    #         + ",appkey:"
-    #         + appkey
-    #         + ",apptoken:"
-    #         + apptoken
-    #     )
-    #     sign = hashlib.md5(sdata.encode(encoding="UTF-8")).hexdigest()
-    #     send_values = {
-    #         "id": 1,
-    #         "method": "EpGet",
-    #         "system": {
-    #             "ver": "1.0",
-    #             "lang": "en",
-    #             "userid": userid,
-    #             "appkey": appkey,
-    #             "time": tick,
-    #             "sign": sign,
-    #         },
-    #         "params": {"agt": agt, "me": me},
-    #     }
-    #     header = {"Content-Type": "application/json"}
-    #     send_data = json.dumps(send_values)
-    #     req = urllib.request.Request(
-    #         url=url, data=send_data.encode("utf-8"), headers=header, method="POST"
-    #     )
-    #     response = json.loads(urllib.request.urlopen(req).read().decode("utf-8"))
-    #     # response = json.loads(await asyncPOST(url, send_data, header))
-    #     return response["message"]["data"]
 
     @staticmethod
     async def async_lifesmart_epset(self, type, val, idx):
-        # self._tick = int(time.time())
-        url = "https://api.us.ilifesmart.com/app/api.EpSet"
-        tick = int(time.time())
-        appkey = self._appkey
-        apptoken = self._apptoken
-        userid = self._userid
-        usertoken = self._usertoken
         agt = self._agt
-        me = self._me
-        sdata = (
-            "method:EpSet,agt:"
-            + agt
-            + ",idx:"
-            + idx
-            + ",me:"
-            + me
-            + ",type:"
-            + type
-            + ",val:"
-            + str(val)
-            + ",time:"
-            + str(tick)
-            + ",userid:"
-            + userid
-            + ",usertoken:"
-            + usertoken
-            + ",appkey:"
-            + appkey
-            + ",apptoken:"
-            + apptoken
-        )
-        sign = hashlib.md5(sdata.encode(encoding="UTF-8")).hexdigest()
-        send_values = {
-            "id": 1,
-            "method": "EpSet",
-            "system": {
-                "ver": "1.0",
-                "lang": "en",
-                "userid": userid,
-                "appkey": appkey,
-                "time": tick,
-                "sign": sign,
-            },
-            "params": {"agt": agt, "me": me, "idx": idx, "type": type, "val": val},
-        }
-        header = {"Content-Type": "application/json"}
-        send_data = json.dumps(send_values)
-        # req = urllib.request.Request(
-        #     url=url, data=send_data.encode("utf-8"), headers=header, method="POST"
-        # )
-        # response = json.loads(urllib.request.urlopen(req).read().decode("utf-8"))
-        response = json.loads(await asyncPOST(url, send_data, header))
-        # _LOGGER.info("epset_send: %s", str(send_data))
-        # _LOGGER.info("epset_res: %s", str(response))
-        return response["code"]
+        me = self._me    
+        responsecode = await self._client.send_epset_async(type, val, idx, agt, me)    
+        return responsecode
 
     @staticmethod
     async def async_lifesmart_epget(self):
-        url = "https://api.us.ilifesmart.com/app/api.EpGet"
-        tick = int(time.time())
-        appkey = self._appkey
-        apptoken = self._apptoken
-        userid = self._userid
-        usertoken = self._usertoken
         agt = self._agt
-        me = self._me
-        sdata = (
-            "method:EpGet,agt:"
-            + agt
-            + ",me:"
-            + me
-            + ",time:"
-            + str(tick)
-            + ",userid:"
-            + userid
-            + ",usertoken:"
-            + usertoken
-            + ",appkey:"
-            + appkey
-            + ",apptoken:"
-            + apptoken
-        )
-        sign = hashlib.md5(sdata.encode(encoding="UTF-8")).hexdigest()
-        send_values = {
-            "id": 1,
-            "method": "EpGet",
-            "system": {
-                "ver": "1.0",
-                "lang": "en",
-                "userid": userid,
-                "appkey": appkey,
-                "time": tick,
-                "sign": sign,
-            },
-            "params": {"agt": agt, "me": me},
-        }
-        header = {"Content-Type": "application/json"}
-        send_data = json.dumps(send_values)
-        # req = urllib.request.Request(
-        #   url=url, data=send_data.encode("utf-8"), headers=header, method="POST"
-        # )
-        # response = json.loads(urllib.request.urlopen(req).read().decode("utf-8"))
-        response = json.loads(await asyncPOST(url, send_data, header))
-        return response["message"]["data"]
+        me = self._me        
+        response = await self._client.get_epget_async(agt, me)
+        return response
 
     @staticmethod
     async def async_lifesmart_sceneset(self, type, rgbw):
-        # self._tick = int(time.time())
-        url = "https://api.us.ilifesmart.com/app/api.SceneSet"
-        tick = int(time.time())
-        appkey = self._appkey
-        apptoken = self._apptoken
-        userid = self._userid
-        usertoken = self._usertoken
+
         agt = self._agt
         id = self._me
-        sdata = (
-            "method:SceneSet,agt:"
-            + agt
-            + ",id:"
-            + id
-            + ",time:"
-            + str(tick)
-            + ",userid:"
-            + userid
-            + ",usertoken:"
-            + usertoken
-            + ",appkey:"
-            + appkey
-            + ",apptoken:"
-            + apptoken
-        )
-        sign = hashlib.md5(sdata.encode(encoding="UTF-8")).hexdigest()
-        send_values = {
-            "id": 1,
-            "method": "SceneSet",
-            "system": {
-                "ver": "1.0",
-                "lang": "en",
-                "userid": userid,
-                "appkey": appkey,
-                "time": tick,
-                "sign": sign,
-            },
-            "params": {"agt": agt, "id": id},
-        }
-        header = {"Content-Type": "application/json"}
-        send_data = json.dumps(send_values)
-        # req = urllib.request.Request(
-        #     url=url, data=send_data.encode("utf-8"), headers=header, method="POST"
-        # )
-        # response = json.loads(urllib.request.urlopen(req).read().decode("utf-8"))
-        response = json.loads(await asyncPOST(url, send_data, header))
-        # _LOGGER.info("sceneset_send: %s", str(send_data))
-        # _LOGGER.info("sceneset_res: %s", str(response))
+        response = self._client.set_scene_async(agt, id)
         return response["code"]
 
 
