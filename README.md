@@ -1,64 +1,67 @@
-使用说明
+(Translate original readme from Chinese) 
+
+Instructions for use
 ==== 
-lifesmart 设备接入 HomeAssistant插件
+Lifesmart devices for Home Assistant
 
-更新说明
--------  
-[2022年7月5日累计更新]
-* Home Assitant 新版本适配：
-  * XXXDevice 改为 XXXEntity 
-  * FanSpeed 枚举修改
-  * device_state_attributes 改为 extra_state_attributes
-  * Climate 类中，统一修改为使用内置属性
-   
+Update the description
+---
 
-[2020年12月26日更新]
+### [Cumulative update on July 2022, 7]
 
-支持流光开关灯光控制
+Home Assitant new version adaptation:
+- XXXDevice for XXXEntity
+- FanSpeed enumeration modification
+- device_state_attributes to extra_state_attributes
+- In the Climate class, Uniform is modified to use built-in properties
 
-更新manifest内容以适配新版本home assistant
+### [Updated on December 2020, 12]
 
-[2020年8月21日更新]
+Support streamer switch light control
 
-新增设备支持：
+Update the manifest content to accommodate the new version of Home Assistant
 
-**超能面板**：SL_NATURE
+### [Updated on December 2020, 8]
 
-PS：其实就是个开关...
+New device support:
 
-[2020年2月4日更新]
+Super panel: SL_NATURE
 
-优化实体ID生成逻辑：解决未加入或存在多个智慧中心时，me号可能存在重复的问题。
+PS: It's actually a switch...
 
-[2019年12月6日更新]
+### [Updated on December 2020, 2]
 
-新增支持设备：
+Optimized entity ID generation logic: Solve the problem that there may be duplicates of the me number when there are no members or multiple smart centers.
 
-**中央空调面板**：V_AIR_P
+### [Updated on December 2019, 12]
 
-**智能门锁反馈信息**：SL_LK_LS、SL_LK_GTM、SL_LK_AG、SL_LK_SG、SL_LK_YL
+New supported devices:
 
-目前支持的设备：
--------  
-1、开关；
+Central air conditioning panel: V_AIR_P
 
-2、灯光：目前仅支持超级碗夜灯；
+Smart door lock feedback information: SL_LK_LS, SL_LK_GTM, SL_LK_AG, SL_LK_SG, SL_LK_YL
 
-3、万能遥控；
+Currently supported devices:
+---
+1. Switch;
 
-4、窗帘电机（仅支持杜亚电机）
+2. Lighting: currently only supports Super Bowl night light;
 
-5、动态感应器、门磁、环境感应器、甲醛/燃气感应器
+3. Universal remote control;
 
-6、空调控制面板
+4. Curtain motor (only support Duya motor)
 
-7、智能门锁信息反馈
+5. Dynamic sensor, door sensor, environmental sensor, formaldehyde/gas sensor
 
-使用方法：
--------  
-1、将lifesmart目录复制到config/custom_components/下
+6. Air conditioning control panel
 
-2、在configuration.yaml文件中增加配置：
+7. Intelligent door lock information feedback
+
+How to use:
+---
+1. Copy the lifesmart directory to config/custom_components/
+
+2. Add configuration in the configuration.yaml file:
 
 ```
 lifesmart:
@@ -67,6 +70,6 @@ lifesmart:
   usertoken: "your_usertoken" 
   userid: "your_userid"
   exclude:
-    - "0011" #需屏蔽设备的me值,这个暂时为必填项，可以填任意内容
-```
-    
+    - "0011" #The me value of the device needs to be shielded. This is temporarily required, and you can fill in any content
+ ```
+ 
