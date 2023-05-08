@@ -1,8 +1,43 @@
-(Translate original readme from Chinese) 
+
 
 Instructions for use
 ==== 
 Lifesmart devices for Home Assistant
+
+
+
+How to use:
+---
+1. Copy the lifesmart directory to config/custom_components/
+
+2. Add configuration in the configuration.yaml file:
+
+```
+lifesmart:
+  appkey: "your_appkey" 
+  apptoken: "your_apptoken"
+  usertoken: "your_usertoken" 
+  userid: "your_userid"
+  exclude:
+    - "0011" #The me value of the device needs to be shielded. This is temporarily required, and you can fill in any content
+ ```
+ 
+
+Currently supported devices:
+---
+1. Switch;
+
+2. Lighting: currently only supports Super Bowl night light;
+
+3. Universal remote control;
+
+4. Curtain motor (only support Duya motor)
+
+5. Dynamic sensor, door sensor, environmental sensor, formaldehyde/gas sensor
+
+6. Air conditioning control panel
+
+7. Intelligent door lock information feedback
 
 Update the description
 ---
@@ -41,35 +76,3 @@ Central air conditioning panel: V_AIR_P
 
 Smart door lock feedback information: SL_LK_LS, SL_LK_GTM, SL_LK_AG, SL_LK_SG, SL_LK_YL
 
-Currently supported devices:
----
-1. Switch;
-
-2. Lighting: currently only supports Super Bowl night light;
-
-3. Universal remote control;
-
-4. Curtain motor (only support Duya motor)
-
-5. Dynamic sensor, door sensor, environmental sensor, formaldehyde/gas sensor
-
-6. Air conditioning control panel
-
-7. Intelligent door lock information feedback
-
-How to use:
----
-1. Copy the lifesmart directory to config/custom_components/
-
-2. Add configuration in the configuration.yaml file:
-
-```
-lifesmart:
-  appkey: "your_appkey" 
-  apptoken: "your_apptoken"
-  usertoken: "your_usertoken" 
-  userid: "your_userid"
-  exclude:
-    - "0011" #The me value of the device needs to be shielded. This is temporarily required, and you can fill in any content
- ```
- 
