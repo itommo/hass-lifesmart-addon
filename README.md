@@ -4,7 +4,6 @@ Instructions
 ==== 
 Lifesmart devices for Home Assistant
 
-
 Prerequisites: 
 ---
 1. Find current LifeSmart region for your country (America, Europe, Asia Pacific, China (old, new , VIP))
@@ -28,6 +27,12 @@ lifesmart:
   userid: "your_userid"
   exclude:
     - "0011" #The me value of the device needs to be shielded. This is temporarily required, and you can fill in any content
+  exclude_agt:
+    - "XXXX" #exlucde all devices in these smart stations
+  ai_include_agt:
+    - "XXXXXXXXX" # agt to be included for AI or Scene as a switch, fill any value to omit
+  ai_include_me:
+    - "xxxx" # me to be included for AI or Scene as a switch, fill any value to omit
  ```
  
 
@@ -49,6 +54,26 @@ Currently supported devices:
 
 Update the description
 ---
+
+### [Updated on October 2022, 9] by likso
+1. Added scene_set service
+2. Added ai and scene as a switch
+3. Added included AI agt and me setting as a switch setting in configuration.yaml
+
+
+### [Updated on July 2022, 12] by likso
+1. Added async support
+2. Fix entity_id format 
+3. Added unique_id property
+4. Added switch SL_NATURE, SL_SW_NS[1|2|3] support
+5. Added light SL_SPOT colour and brightness support
+6. Added light strip SL_CT_RGBW colour and brightness support
+7. Added light SL_LI_WW colour temperature and brightness support
+8. Fixed Door sensor SL_SC_BG open/closed status
+9. Changed server url to https://api.us.ilifesmart.com/
+10. Added excluded agt setting in configuration.yaml
+
+Added the following into configuration.yaml：
 
 ### [Cumulative update on July 2022, 7]
 
