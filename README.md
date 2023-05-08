@@ -9,7 +9,7 @@ Prerequisites:
 ---
 1. Find current LifeSmart region for your country (America, Europe, Asia Pacific, China (old, new , VIP))
 
-1. New Application from LifeSmart Open Platform to obtain `app key` and `app token`, http://www.ilifesmart.com/open/login (caution! this url is not https)
+1. New Application from LifeSmart Open Platform to obtain `app key` and `app token`, http://www.ilifesmart.com/open/login (caution! this url is not https and all content is in chinese, browse with translation should help)
 
 1. Login to application created in previous bullet with LifeSmart user to grant 3rd party application access to get `user token`, please ensure you use the api address with correct region. 
 
