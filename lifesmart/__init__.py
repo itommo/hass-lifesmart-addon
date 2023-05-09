@@ -161,7 +161,7 @@ CLIMATE_TYPES = ["V_AIR_P", "SL_CP_DN"]
 ENTITYID = "entity_id"
 DOMAIN = "lifesmart"
 
-LifeSmart_STATE_MANAGER = "lifesmart_wss"
+LIFESMART_STATE_MANAGER = "lifesmart_wss"
 
 
 async def async_setup(hass, config):
@@ -301,7 +301,7 @@ async def async_setup(hass, config):
             fanmode = FAN_HIGH
         return fanmode
 
-    async def set_Event(msg):
+    async def data_update_handler(msg):
         if (
             msg["msg"]["idx"] != "s"
             and msg["msg"]["me"] not in exclude_items
@@ -660,7 +660,7 @@ async def async_setup(hass, config):
             return
         if msg["type"] != "io":
             return
-        asyncio.run(set_Event(msg))
+        asyncio.run(data_update_handler(msg))
 
     def on_error(ws, error):
         _LOGGER.error("websocket_error: %s", str(error))
@@ -700,8 +700,8 @@ async def async_setup(hass, config):
         on_close=on_close,
     )
     ws.on_open = on_open
-    hass.data[LifeSmart_STATE_MANAGER] = LifeSmartStatesManager(ws=ws)
-    hass.data[LifeSmart_STATE_MANAGER].start_keep_alive()
+    hass.data[LIFESMART_STATE_MANAGER] = LifeSmartStatesManager(ws=ws)
+    hass.data[LIFESMART_STATE_MANAGER].start_keep_alive()
     return True
 
 
