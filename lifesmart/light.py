@@ -294,9 +294,7 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
                     rgbhex = int(rgbhex, 16)
 
                     if (
-                        await super().async_lifesmart_epset(
-                            self, "0xff", rgbhex, self._idx
-                        )
+                        await super().async_lifesmart_epset(self, "0xff", rgbhex, self._idx)
                         == 0
                     ):
                         self._state = True

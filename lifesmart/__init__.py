@@ -1,4 +1,27 @@
 """lifesmart by @skyzhishui"""
+from homeassistnat.const import CONF_URL
+from homeassistant.util.dt import utcnow
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.entity import Entity
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import discovery
+from homeassistant.core import callback
+from homeassistant.components.climate.const import (
+    HVAC_MODE_AUTO,
+    HVAC_MODE_COOL,
+    HVAC_MODE_FAN_ONLY,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_DRY,
+    SUPPORT_FAN_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    HVAC_MODE_OFF,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
+)
+from homeassistant.const import (
+    CONF_FRIENDLY_NAME,
+)
 import subprocess
 from unittest import case
 import urllib.request
@@ -29,29 +52,6 @@ import sys
 
 sys.setrecursionlimit(100000)
 
-from homeassistant.const import (
-    CONF_FRIENDLY_NAME,
-)
-from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_DRY,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    HVAC_MODE_OFF,
-    FAN_HIGH,
-    FAN_LOW,
-    FAN_MEDIUM,
-)
-from homeassistant.core import callback
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.util.dt import utcnow
-from homeassistnat.const import CONF_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ CONF_AI_INCLUDE_ITEMS = "ai_include_me"
 CON_AI_TYPE_SCENE = 'scene'
 CON_AI_TYPE_AIB = 'aib'
 CON_AI_TYPE_GROUP = 'grouphw'
-CON_AI_TYPES =[
+CON_AI_TYPES = [
     CON_AI_TYPE_SCENE,
     CON_AI_TYPE_AIB,
     CON_AI_TYPE_GROUP,
@@ -163,6 +163,7 @@ DOMAIN = "lifesmart"
 
 LifeSmart_STATE_MANAGER = "lifesmart_wss"
 
+
 async def async_setup(hass, config):
     """Set up the lifesmart component."""
     param = {}
@@ -175,11 +176,10 @@ async def async_setup(hass, config):
     exclude_agts = config[DOMAIN][CONF_EXCLUDE_AGTS]
     ai_include_agts = config[DOMAIN][CONF_AI_INCLUDE_AGTS]
     ai_include_items = config[DOMAIN][CONF_AI_INCLUDE_ITEMS]
-    
-    client = LifeSmartClient(param["baseurl"], param["appkey"], param["apptoken"], param["usertoken"], param["userid"])
-    param["client"] = client
 
-    
+    client = LifeSmartClient(param["baseurl"], param["appkey"],
+                             param["apptoken"], param["usertoken"], param["userid"])
+    param["client"] = client
 
     devices = await client.get_all_device_async()
 
@@ -195,7 +195,8 @@ async def async_setup(hass, config):
             )
         if devtype in BINARY_SENSOR_TYPES:
             discovery.load_platform(
-                hass, "binary_sensor", DOMAIN, {"dev": dev, "param": param}, config
+                hass, "binary_sensor", DOMAIN, {
+                    "dev": dev, "param": param}, config
             )
         if devtype in COVER_TYPES:
             discovery.load_platform(
@@ -228,11 +229,11 @@ async def async_setup(hass, config):
             if scene['id'] in ai_include_items:
                 devtype = "ai"
                 me = scene['id']
-                dev = { "devtype": devtype, "me": me, "agt": agt }
+                dev = {"devtype": devtype, "me": me, "agt": agt}
                 discovery.load_platform(
-                    hass, "switch", DOMAIN, {"dev": {**dev, **scene}, "param": param}, config
+                    hass, "switch", DOMAIN, {
+                        "dev": {**dev, **scene}, "param": param}, config
                 )
-                
 
     async def send_keys(call):
         """Handle the service call."""
@@ -366,7 +367,8 @@ async def async_setup(hass, config):
                         hass.states.set(enid, "on", attrs)
 
             elif devtype in COVER_TYPES and msg["msg"]["idx"] == "P1":
-                enid = "cover." + (devtype + "_" + agt + "_" + msg["msg"]["me"]).lower()
+                enid = "cover." + (devtype + "_" + agt +
+                                   "_" + msg["msg"]["me"]).lower()
                 attrs = dict(hass.states.get(enid).attributes)
                 nval = msg["msg"]["val"]
                 ntype = msg["msg"]["type"]
@@ -432,7 +434,7 @@ async def async_setup(hass, config):
                 _LOGGER.debug("websocket_light_attrs: %s", str(attrs))
                 value = msg["msg"]["val"]
                 idx = msg["msg"]["idx"]
-                
+
                 if msg["msg"]["type"] % 2 == 0:
                     hass.states.set(enid, "off", attrs)
                 else:
@@ -445,7 +447,8 @@ async def async_setup(hass, config):
                             rgbhex = bytes.fromhex(rgbhexstr)
                             rgba = struct.unpack("BBBB", rgbhex)
                             rgb = rgba[1:]
-                            attrs[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb)
+                            attrs[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(
+                                *rgb)
                             _LOGGER.info("hs: %s", str(attrs[ATTR_HS_COLOR]))
                     elif idx in ["RGB_O"]:
                         if value == 0:
@@ -498,7 +501,8 @@ async def async_setup(hass, config):
                 elif idx in ["P2"]:
                     ratio = 1 - (value / 255)
                     attrs[ATTR_COLOR_TEMP] = (
-                        int((attrs[ATTR_MAX_MIREDS] - attrs[ATTR_MIN_MIREDS]) * ratio)
+                        int((attrs[ATTR_MAX_MIREDS] -
+                            attrs[ATTR_MIN_MIREDS]) * ratio)
                         + attrs[ATTR_MIN_MIREDS]
                     )
                     hass.states.set(enid, state, attrs)
@@ -621,30 +625,30 @@ async def async_setup(hass, config):
                 )
                 attrs = hass.states.get(enid).attributes
                 hass.states.set(enid, msg["msg"]["v"], attrs)
-            
+
         # AI event
         if (msg["msg"]["idx"] == "s"
             and msg["msg"]["me"] in ai_include_items
             and msg["msg"]["agt"] in ai_include_agts
             ):
-            _LOGGER.info("AI Event: %s",str(msg))
+            _LOGGER.info("AI Event: %s", str(msg))
             devtype = msg["msg"]["devtype"]
             agt = msg["msg"]["agt"][:-3]
             enid = (
-               "switch."
-               + (
-                  devtype
-                  + "_"
-                  + agt
-                  + "_"
-                  + msg["msg"]["me"]
-                  + "_"
-                  + msg["msg"]["idx"]
+                "switch."
+                + (
+                    devtype
+                    + "_"
+                    + agt
+                    + "_"
+                    + msg["msg"]["me"]
+                    + "_"
+                    + msg["msg"]["idx"]
                 ).lower()
             )
             attrs = hass.states.get(enid).attributes
-           
-            if msg["msg"]["stat"] == 3:                    
+
+            if msg["msg"]["stat"] == 3:
                 hass.states.set(enid, "on", attrs)
             elif msg["msg"]["stat"] == 4:
                 hass.states.set(enid, "off", attrs)
@@ -759,24 +763,25 @@ class LifeSmartDevice(Entity):
         """check with the entity for an updated state."""
         return False
 
-
-    @staticmethod
+    #@staticmethod
     async def async_lifesmart_epset(self, type, val, idx):
+        """Send command to lifesmart device"""
         agt = self._agt
-        me = self._me    
-        responsecode = await self._client.send_epset_async(type, val, idx, agt, me)    
+        me = self._me
+        responsecode = await self._client.send_epset_async(type, val, idx, agt, me)
         return responsecode
 
-    @staticmethod
+    #@staticmethod
     async def async_lifesmart_epget(self):
+        """Get lifesmart device info"""
         agt = self._agt
-        me = self._me        
+        me = self._me
         response = await self._client.get_epget_async(agt, me)
         return response
 
-    @staticmethod
+    #@staticmethod
     async def async_lifesmart_sceneset(self, type, rgbw):
-
+        """Set the scene"""
         agt = self._agt
         id = self._me
         response = self._client.set_scene_async(agt, id)
@@ -784,6 +789,7 @@ class LifeSmartDevice(Entity):
 
 
 class LifeSmartStatesManager(threading.Thread):
+    """Instance to manage websocket to get push data from LifeSmart service"""
     def __init__(self, ws):
         """Init LifeSmart Update Manager."""
         threading.Thread.__init__(self)
