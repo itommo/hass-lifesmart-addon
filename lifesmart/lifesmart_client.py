@@ -142,8 +142,8 @@ class LifeSmartClient:
         response = json.loads(await self.post_async(url, send_data, header))
         return response
 
-    async def send_ir_ackey_async(self, agt, ai, me, category, brand, keys, power, mode, temp, wind, swing, ):
-        """Send an IR Ack to a specific device."""
+    async def send_ir_ackey_async(self, agt, ai, me, category, brand, key, power, mode, temp, wind, swing, ):
+        """Send an IR AIR Conditioner Key to a specific device."""
         url = self.get_api_url() + "/irapi.SendACKeys"
         tick = int(time.time())
         # keys = str(keys)
@@ -156,8 +156,8 @@ class LifeSmartClient:
             + brand
             + ",category:"
             + category
-            + ",keys:"
-            + keys
+            + ",key:"
+            + key
             + ",me:"
             + me
             + ",mode:"
@@ -183,7 +183,7 @@ class LifeSmartClient:
                 "category": category,
                 "brand": brand,
                 "ai": ai,
-                "keys": keys,
+                "key": key,
                 "power": power,
                 "mode": mode,
                 "temp": temp,
