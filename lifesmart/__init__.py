@@ -763,7 +763,6 @@ class LifeSmartDevice(Entity):
         """check with the entity for an updated state."""
         return False
 
-    #@staticmethod
     async def async_lifesmart_epset(self, type, val, idx):
         """Send command to lifesmart device"""
         agt = self._agt
@@ -771,7 +770,6 @@ class LifeSmartDevice(Entity):
         responsecode = await self._client.send_epset_async(type, val, idx, agt, me)
         return responsecode
 
-    #@staticmethod
     async def async_lifesmart_epget(self):
         """Get lifesmart device info"""
         agt = self._agt
@@ -779,7 +777,6 @@ class LifeSmartDevice(Entity):
         response = await self._client.get_epget_async(agt, me)
         return response
 
-    #@staticmethod
     async def async_lifesmart_sceneset(self, type, rgbw):
         """Set the scene"""
         agt = self._agt
