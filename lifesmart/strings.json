@@ -1,0 +1,48 @@
+{
+  "services": {
+    "send_keys": {
+      "name": "Send Keys",
+      "description": "Send IR keys to remote device",
+      "fields": {
+        "me": {
+          "name": "Me",
+          "description": "Sub device Id."
+        },
+        "agt": {
+          "name": "AGT",
+          "description": "Hub device Id."
+        },
+        "ai": {
+          "name": "Remote Id",
+          "description": "Remote device Id."
+        },
+        "category": {
+          "name": "Category",
+          "description": "Target device category."
+        },
+        "brand": {
+          "name": "Brand",
+          "description": "Target device brand."
+        },
+        "keys": {
+          "name": "Keys",
+          "description": "Command key to be sent."
+        }
+      }
+    },
+    "scene_set": {
+      "name": "Scene Set",
+      "description": "Set scene to remote device",
+      "fields": {        
+        "agt": {
+          "name": "AGT",
+          "description": "Hub device Id."
+        },
+        "id": {
+          "name": "Scene Id",
+          "description": "Remote Scene Id."
+        },
+      }
+    }
+  }
+}
