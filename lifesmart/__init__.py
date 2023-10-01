@@ -674,18 +674,7 @@ async def async_setup(hass, config):
 
     def on_open(ws):
         client = param["client"]
-        tick = int(time.time())
-        sdata = (
-            "method:WbAuth,"
-            + client.generate_time_and_credential_data(tick)
-        )
-        send_values = {
-            "id": 1,
-            "method": "WbAuth",
-            "system": client.generate_system_request_body(tick, sdata),
-        }
-        header = {"Content-Type": "application/json"}
-        send_data = json.dumps(send_values)
+        send_data = client.generate_wss_auth()
         ws.send(send_data)
         _LOGGER.debug("lifesmart websocket sending_data...")
 

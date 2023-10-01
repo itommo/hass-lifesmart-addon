@@ -3,7 +3,8 @@ import logging
 import time
 import hashlib
 import json
-
+import ssl
+import websockets
 import aiohttp
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,10 +83,8 @@ class LifeSmartClient:
         sdata = (
             "method:SceneSet,agt:"
             + agt
-            + ",id:"
-            + id
-            + ","
-            + self.generate_time_and_credential_data(tick)
+            + ",id:" + id
+            + "," + self.generate_time_and_credential_data(tick)
         )
         send_values = {
             "id": 101,
@@ -148,30 +147,19 @@ class LifeSmartClient:
         tick = int(time.time())
         # keys = str(keys)
         sdata = (
-            "method:SendACKeys,agt:"
-            + agt
-            + ",ai:"
-            + ai
-            + ",brand:"
-            + brand
-            + ",category:"
-            + category
-            + ",key:"
-            + key
-            + ",me:"
-            + me
-            + ",mode:"
-            + str(mode)
-            + ",power:"
-            + str(power)
-            + ",swing:"
-            + str(swing)
-            + ",temp:"
-            + str(temp)
-            + ",wind:"
-            + str(wind)
-            + ","
-            + self.generate_time_and_credential_data(tick)
+            "method:SendACKeys"
+            + ",agt:" + agt
+            + ",ai:" + ai
+            + ",brand:" + brand
+            + ",category:" + category
+            + ",key:" + key
+            + ",me:" + me
+            + ",mode:" + str(mode)
+            + ",power:" + str(power)
+            + ",swing:" + str(swing)
+            + ",temp:" + str(temp)
+            + ",wind:" + str(wind)
+            + "," + self.generate_time_and_credential_data(tick)
         )
         _LOGGER.debug("sendackey: %s", str(sdata))
         send_values = {
@@ -204,18 +192,13 @@ class LifeSmartClient:
         url = self.get_api_url() + "/api.EpSet"
         tick = int(time.time())
         sdata = (
-            "method:EpSet,agt:"
-            + agt
-            + ",idx:"
-            + idx
-            + ",me:"
-            + me
-            + ",type:"
-            + type
-            + ",val:"
-            + str(val)
-            + ","
-            + self.generate_time_and_credential_data(tick)
+            "method:EpSet"
+            + ",agt:" + agt
+            + ",idx:" + idx
+            + ",me:" + me
+            + ",type:" + type
+            + ",val:" + str(val)
+            + "," + self.generate_time_and_credential_data(tick)
         )
         send_values = {
             "id": 1,
@@ -324,7 +307,7 @@ class LifeSmartClient:
 
     def get_wss_url(self):
         """Generate websocket (wss) URL"""
-        return "wss://" + self._baseurl + ":8443/wsapp/",
+        return "wss://" + self._baseurl + ":8443/wsapp/"
 
     def generate_system_request_body(self, tick, data):
         """Generate system node in request body which contain credential and signature"""
@@ -350,3 +333,18 @@ class LifeSmartClient:
         """Generate default http header required by LifeSmart"""
         return {"Content-Type": "application/json"}
 
+    def generate_wss_auth(self):
+        """Generate authentication message with signature for wss connection"""
+        tick = int(time.time())
+        sdata = (
+            "method:WbAuth,"
+            + self.generate_time_and_credential_data(tick)
+        )
+
+        send_values = {
+            "id": 1,
+            "method": "WbAuth",
+            "system": self.generate_system_request_body(tick, sdata),
+        }
+        send_data = json.dumps(send_values)
+        return send_data
