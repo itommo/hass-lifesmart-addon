@@ -1,0 +1,11 @@
+{
+  "domain": "lifesmart",
+  "name": "LiftSmart",
+  "codeowners": ["@iKaew"],
+  "dependencies": [],
+  "documentation": "https://github.com/iKaew/hass-lifesmart-addon",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",  
+  "requirements": [],
+  "version": "0.0.1"
+}

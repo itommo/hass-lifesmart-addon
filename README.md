@@ -15,7 +15,7 @@ Prerequisites:
 
 How to install:
 ---
-1. Copy the lifesmart directory to config/custom_components/
+1. Copy the custom_components/lifesmart directory to config/custom_components/ of Home Assistant
 
 2. Add configuration in the configuration.yaml file:
 
@@ -25,7 +25,7 @@ lifesmart:
   apptoken: "your apptoken"
   usertoken: "your usertoken" 
   userid: "your userid"
-  url: "your api address" #e.g. api.apz.ilifesmart.com for asia pacific
+  url: "your api address" #e.g. api.apz.ilifesmart.com for asia pacific, api.us.ilifesmart.com for US
   exclude:
     - "0011" #The me value of the device needs to be shielded. This is temporarily required, and you can fill in any content
   exclude_agt:
