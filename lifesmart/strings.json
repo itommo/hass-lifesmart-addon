@@ -41,7 +41,7 @@
         "id": {
           "name": "Scene Id",
           "description": "Remote Scene Id."
-        },
+        }
       }
     }
   }
