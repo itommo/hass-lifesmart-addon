@@ -21,10 +21,11 @@ How to install:
 
 ```
 lifesmart:
-  appkey: "your_appkey" 
-  apptoken: "your_apptoken"
-  usertoken: "your_usertoken" 
-  userid: "your_userid"
+  appkey: "your appkey" 
+  apptoken: "your apptoken"
+  usertoken: "your usertoken" 
+  userid: "your userid"
+  url: "your api address" #e.g. api.apz.ilifesmart.com for asia pacific
   exclude:
     - "0011" #The me value of the device needs to be shielded. This is temporarily required, and you can fill in any content
   exclude_agt:
