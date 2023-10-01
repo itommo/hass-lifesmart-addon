@@ -1,11 +1,11 @@
 {
   "domain": "lifesmart",
-  "name": "skyzhishui",
-  "documentation": "https://github.com/skyzhishui/custom_components",
+  "name": "Kaew",
+  "documentation": "https://github.com/iKaew/hass-lifesmart-addon",
   "requirements": [],
   "dependencies": [],
   "codeowners": [
-    "@skyzhishui"
+    "iKaew"
   ],
-  "version": "22.07.05"
+  "version": "0.0.1"
 }
