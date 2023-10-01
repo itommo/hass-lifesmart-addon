@@ -2,6 +2,7 @@
   "domain": "lifesmart",
   "name": "Kaew",
   "documentation": "https://github.com/iKaew/hass-lifesmart-addon",
+  "iot_class": "cloud_push",  
   "requirements": [],
   "dependencies": [],
   "codeowners": [
