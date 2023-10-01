@@ -1,4 +1,4 @@
-"""lifesmart by @skyzhishui"""
+"""lifesmart by @ikaew, @skyzhishui"""
 from homeassistnat.const import CONF_URL
 from homeassistant.util.dt import utcnow
 from homeassistant.helpers.event import async_track_point_in_utc_time
