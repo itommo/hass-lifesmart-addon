@@ -6,6 +6,7 @@
   "documentation": "https://github.com/iKaew/hass-lifesmart-addon",
   "integration_type": "hub",
   "iot_class": "cloud_push",  
+  "issue_tracker": "https://github.com/iKaew/hass-lifesmart-addon/issues",
   "requirements": [],
   "version": "0.0.1"
 }
