@@ -233,7 +233,7 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
             if ATTR_BRIGHTNESS in kwargs:
                 if (
                     await super().async_lifesmart_epset(
-                        self, "0xcf", kwargs[ATTR_BRIGHTNESS], "P1"
+                        "0xcf", kwargs[ATTR_BRIGHTNESS], "P1"
                     )
                     == 0
                 ):
@@ -244,10 +244,10 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
                     self._max_mireds - self._min_mireds
                 )
                 val = int((-ratio + 1) * 255)
-                if await super().async_lifesmart_epset(self, "0xcf", val, "P2") == 0:
+                if await super().async_lifesmart_epset("0xcf", val, "P2") == 0:
                     self._color_temp = kwargs[ATTR_COLOR_TEMP]
                     self.async_schedule_update_ha_state()
-            if await super().async_lifesmart_epset(self, "0x81", 1, "P1") == 0:
+            if await super().async_lifesmart_epset("0x81", 1, "P1") == 0:
                 self._state = True
                 self.async_schedule_update_ha_state()
 
@@ -261,10 +261,7 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
                 rgbhex = binascii.hexlify(struct.pack("BBBB", *rgba)).decode("ASCII")
                 rgbhex = int(rgbhex, 16)
 
-                if (
-                    await super().async_lifesmart_epset(self, "0xff", rgbhex, self._idx)
-                    == 0
-                ):
+                if await super().async_lifesmart_epset("0xff", rgbhex, self._idx) == 0:
                     self._state = True
                     self.async_schedule_update_ha_state()
 
@@ -276,10 +273,7 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
                 rgbhex = binascii.hexlify(struct.pack("BBBB", *rgbhex)).decode("ASCII")
                 rgbhex = int(rgbhex, 16)
 
-                if (
-                    await super().async_lifesmart_epset(self, "0xff", rgbhex, self._idx)
-                    == 0
-                ):
+                if await super().async_lifesmart_epset("0xff", rgbhex, self._idx) == 0:
                     self._state = True
                     self.async_schedule_update_ha_state()
 
@@ -294,23 +288,20 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
                     rgbhex = int(rgbhex, 16)
 
                     if (
-                        await super().async_lifesmart_epset(self, "0xff", rgbhex, self._idx)
+                        await super().async_lifesmart_epset("0xff", rgbhex, self._idx)
                         == 0
                     ):
                         self._state = True
                         self.async_schedule_update_ha_state()
                 else:
-                    if (
-                        await super().async_lifesmart_epset(self, "0x81", 1, self._idx)
-                        == 0
-                    ):
+                    if await super().async_lifesmart_epset("0x81", 1, self._idx) == 0:
                         self._state = True
                         self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         if self._devtype in LIGHT_DIMMER_TYPES:
-            if await super().async_lifesmart_epset(self, "0x80", 0, "P1") == 0:
+            if await super().async_lifesmart_epset("0x80", 0, "P1") == 0:
                 self._state = False
                 self.async_schedule_update_ha_state()
 
@@ -322,19 +313,16 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
                 rgbhex = binascii.hexlify(struct.pack("BBBB", *rgbhex)).decode("ASCII")
                 rgbhex = int(rgbhex, 16)
 
-                if (
-                    await super().async_lifesmart_epset(self, "0xfe", rgbhex, self._idx)
-                    == 0
-                ):
+                if await super().async_lifesmart_epset("0xfe", rgbhex, self._idx) == 0:
                     self._state = False
                     self.async_schedule_update_ha_state()
             else:
-                if await super().async_lifesmart_epset(self, "0x80", 0, self._idx) == 0:
+                if await super().async_lifesmart_epset("0x80", 0, self._idx) == 0:
                     self._state = False
                     self.async_schedule_update_ha_state()
 
         else:
-            if await super().async_lifesmart_epset(self, "0x80", 0, self._idx) == 0:
+            if await super().async_lifesmart_epset("0x80", 0, self._idx) == 0:
                 self._state = False
                 self.async_schedule_update_ha_state()
 

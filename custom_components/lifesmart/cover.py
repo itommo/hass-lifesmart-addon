@@ -45,20 +45,20 @@ class LifeSmartCover(LifeSmartDevice, CoverEntity):
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        await super().async_lifesmart_epset(self, "0xCF", 0, "P2")
+        await super().async_lifesmart_epset("0xCF", 0, "P2")
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        await super().async_lifesmart_epset(self, "0xCF", 100, "P2")
+        await super().async_lifesmart_epset("0xCF", 100, "P2")
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        await super().async_lifesmart_epset(self, "0xCE", 0x80, "P2")
+        await super().async_lifesmart_epset("0xCE", 0x80, "P2")
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         position = kwargs.get(ATTR_POSITION)
-        await super().async_lifesmart_epset(self, "0xCE", position, "P2")
+        await super().async_lifesmart_epset("0xCE", position, "P2")
 
     @property
     def device_class(self):

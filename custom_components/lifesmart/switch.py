@@ -15,15 +15,16 @@ from homeassistant.components.switch import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CON_AI_TYPE_SCENE = 'scene'
-CON_AI_TYPE_AIB = 'aib'
-CON_AI_TYPE_GROUP = 'grouphw'
-CON_AI_TYPES =[
+CON_AI_TYPE_SCENE = "scene"
+CON_AI_TYPE_AIB = "aib"
+CON_AI_TYPE_GROUP = "grouphw"
+CON_AI_TYPES = [
     CON_AI_TYPE_SCENE,
     CON_AI_TYPE_AIB,
     CON_AI_TYPE_GROUP,
 ]
 AI_TYPES = ["ai"]
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Find and return lifesmart switches."""
@@ -77,8 +78,8 @@ class LifeSmartSwitch(LifeSmartDevice, SwitchEntity):
             if await super().async_lifesmart_sceneset(self, None, None) == 0:
                 self._state = True
                 self.async_schedule_update_ha_state()
-        else:    
-            if await super().async_lifesmart_epset(self, "0x81", 1, self._idx) == 0:
+        else:
+            if await super().async_lifesmart_epset("0x81", 1, self._idx) == 0:
                 self._state = True
                 self.async_schedule_update_ha_state()
 
@@ -88,7 +89,7 @@ class LifeSmartSwitch(LifeSmartDevice, SwitchEntity):
             self._state = False
             self.async_schedule_update_ha_state()
         else:
-            if await super().async_lifesmart_epset(self, "0x80", 0, self._idx) == 0:
+            if await super().async_lifesmart_epset("0x80", 0, self._idx) == 0:
                 self._state = False
                 self.async_schedule_update_ha_state()
 

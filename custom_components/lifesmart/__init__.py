@@ -1,5 +1,5 @@
 """lifesmart by @ikaew, @skyzhishui"""
-from homeassistnat.const import CONF_URL
+from homeassistant.const import CONF_URL
 from homeassistant.util.dt import utcnow
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.entity import Entity
@@ -31,7 +31,7 @@ import datetime
 import hashlib
 import logging
 import threading
-from lifesmart.lifesmart_client import LifeSmartClient
+from .lifesmart_client import LifeSmartClient
 import websocket
 import asyncio
 import struct
@@ -64,9 +64,9 @@ CONF_EXCLUDE_AGTS = "exclude_agt"
 CONF_AI_INCLUDE_AGTS = "ai_include_agt"
 CONF_AI_INCLUDE_ITEMS = "ai_include_me"
 
-CON_AI_TYPE_SCENE = 'scene'
-CON_AI_TYPE_AIB = 'aib'
-CON_AI_TYPE_GROUP = 'grouphw'
+CON_AI_TYPE_SCENE = "scene"
+CON_AI_TYPE_AIB = "aib"
+CON_AI_TYPE_GROUP = "grouphw"
 CON_AI_TYPES = [
     CON_AI_TYPE_SCENE,
     CON_AI_TYPE_AIB,
@@ -177,8 +177,23 @@ async def async_setup(hass, config):
     ai_include_agts = config[DOMAIN][CONF_AI_INCLUDE_AGTS]
     ai_include_items = config[DOMAIN][CONF_AI_INCLUDE_ITEMS]
 
-    client = LifeSmartClient(param["baseurl"], param["appkey"],
-                             param["apptoken"], param["usertoken"], param["userid"])
+    # default data
+    if exclude_items is None:
+        exclude_items = []
+    if exclude_agts is None:
+        exclude_agts = []
+    if ai_include_agts is None:
+        ai_include_agts = []
+    if ai_include_items is None:
+        ai_include_items = []
+
+    client = LifeSmartClient(
+        param["baseurl"],
+        param["appkey"],
+        param["apptoken"],
+        param["usertoken"],
+        param["userid"],
+    )
     param["client"] = client
 
     devices = await client.get_all_device_async()
@@ -189,50 +204,55 @@ async def async_setup(hass, config):
         devtype = dev["devtype"]
         # dev['agt'] = dev['agt'].replace("_","")
         # dev['agt'] = dev['agt'][:-3]
+
         if devtype in SWTICH_TYPES:
             discovery.load_platform(
                 hass, "switch", DOMAIN, {"dev": dev, "param": param}, config
             )
-        if devtype in BINARY_SENSOR_TYPES:
+        elif devtype in BINARY_SENSOR_TYPES:
             discovery.load_platform(
-                hass, "binary_sensor", DOMAIN, {
-                    "dev": dev, "param": param}, config
+                hass, "binary_sensor", DOMAIN, {"dev": dev, "param": param}, config
             )
-        if devtype in COVER_TYPES:
+        elif devtype in COVER_TYPES:
             discovery.load_platform(
                 hass, "cover", DOMAIN, {"dev": dev, "param": param}, config
             )
-        if devtype in SPOT_TYPES:
+        elif devtype in SPOT_TYPES:
             discovery.load_platform(
                 hass, "light", DOMAIN, {"dev": dev, "param": param}, config
             )
-        if devtype in CLIMATE_TYPES:
+        elif devtype in CLIMATE_TYPES:
             discovery.load_platform(
                 hass, "climate", DOMAIN, {"dev": dev, "param": param}, config
             )
-        if devtype in GAS_SENSOR_TYPES or devtype in EV_SENSOR_TYPES:
+        elif devtype in GAS_SENSOR_TYPES or devtype in EV_SENSOR_TYPES:
             discovery.load_platform(
                 hass, "sensor", DOMAIN, {"dev": dev, "param": param}, config
             )
-        if devtype in OT_SENSOR_TYPES:
+        elif devtype in OT_SENSOR_TYPES:
             discovery.load_platform(
                 hass, "sensor", DOMAIN, {"dev": dev, "param": param}, config
             )
-        if devtype in LIGHT_SWITCH_TYPES or devtype in LIGHT_DIMMER_TYPES:
+        elif devtype in LIGHT_SWITCH_TYPES or devtype in LIGHT_DIMMER_TYPES:
             discovery.load_platform(
                 hass, "light", DOMAIN, {"dev": dev, "param": param}, config
             )
+        else:
+            _LOGGER.info("device type %s is not supported", devtype)
 
     for agt in ai_include_agts:
         scenes = await client.get_all_scene_async(agt)
         for scene in scenes:
-            if scene['id'] in ai_include_items:
+            if scene["id"] in ai_include_items:
                 devtype = "ai"
-                me = scene['id']
+                me = scene["id"]
                 dev = {"devtype": devtype, "me": me, "agt": agt}
                 discovery.load_platform(
-                    hass, "switch", DOMAIN, {
-                        "dev": {**dev, **scene}, "param": param}, config
+                    hass,
+                    "switch",
+                    DOMAIN,
+                    {"dev": {**dev, **scene}, "param": param},
+                    config,
                 )
 
     async def send_keys(call):
@@ -310,6 +330,7 @@ async def async_setup(hass, config):
             devtype = msg["msg"]["devtype"]
             # agt = msg['msg']['agt'].replace("_","")
             agt = msg["msg"]["agt"][:-3]
+            agt = agt.replace("-", "_")  # entityid need to be the same
             if devtype in SWTICH_TYPES and msg["msg"]["idx"] in [
                 "L1",
                 "L2",
@@ -367,8 +388,7 @@ async def async_setup(hass, config):
                         hass.states.set(enid, "on", attrs)
 
             elif devtype in COVER_TYPES and msg["msg"]["idx"] == "P1":
-                enid = "cover." + (devtype + "_" + agt +
-                                   "_" + msg["msg"]["me"]).lower()
+                enid = "cover." + (devtype + "_" + agt + "_" + msg["msg"]["me"]).lower()
                 attrs = dict(hass.states.get(enid).attributes)
                 nval = msg["msg"]["val"]
                 ntype = msg["msg"]["type"]
@@ -447,8 +467,7 @@ async def async_setup(hass, config):
                             rgbhex = bytes.fromhex(rgbhexstr)
                             rgba = struct.unpack("BBBB", rgbhex)
                             rgb = rgba[1:]
-                            attrs[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(
-                                *rgb)
+                            attrs[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb)
                             _LOGGER.info("hs: %s", str(attrs[ATTR_HS_COLOR]))
                     elif idx in ["RGB_O"]:
                         if value == 0:
@@ -501,8 +520,7 @@ async def async_setup(hass, config):
                 elif idx in ["P2"]:
                     ratio = 1 - (value / 255)
                     attrs[ATTR_COLOR_TEMP] = (
-                        int((attrs[ATTR_MAX_MIREDS] -
-                            attrs[ATTR_MIN_MIREDS]) * ratio)
+                        int((attrs[ATTR_MAX_MIREDS] - attrs[ATTR_MIN_MIREDS]) * ratio)
                         + attrs[ATTR_MIN_MIREDS]
                     )
                     hass.states.set(enid, state, attrs)
@@ -627,10 +645,11 @@ async def async_setup(hass, config):
                 hass.states.set(enid, msg["msg"]["v"], attrs)
 
         # AI event
-        if (msg["msg"]["idx"] == "s"
+        if (
+            msg["msg"]["idx"] == "s"
             and msg["msg"]["me"] in ai_include_items
             and msg["msg"]["agt"] in ai_include_agts
-            ):
+        ):
             _LOGGER.info("AI Event: %s", str(msg))
             devtype = msg["msg"]["devtype"]
             agt = msg["msg"]["agt"][:-3]
@@ -697,16 +716,22 @@ async def async_setup(hass, config):
 class LifeSmartDevice(Entity):
     """LifeSmart base device."""
 
-    def __init__(self, dev, idx, val, param):
+    def __init__(self, dev, idx, val, param) -> None:
         """Initialize the switch."""
         if dev["devtype"] in SWTICH_TYPES and dev["devtype"] not in [
             "SL_NATURE",
             "SL_SW_ND1",
             "SL_SW_ND2",
             "SL_SW_ND3",
+            "SL_SW_MJ1",
+            "SL_SW_MJ2",
         ]:
             self._name = dev["name"] + "_" + dev["data"][idx]["name"]
-        elif dev["devtype"] in AI_TYPES or dev["devtype"] in LIGHT_DIMMER_TYPES or dev["devtype"] in LIGHT_SWITCH_TYPES:
+        elif (
+            dev["devtype"] in AI_TYPES
+            or dev["devtype"] in LIGHT_DIMMER_TYPES
+            or dev["devtype"] in LIGHT_SWITCH_TYPES
+        ):
             self._name = dev["name"]
         else:
             self._name = dev["name"] + "_" + idx
@@ -776,6 +801,7 @@ class LifeSmartDevice(Entity):
 
 class LifeSmartStatesManager(threading.Thread):
     """Instance to manage websocket to get push data from LifeSmart service"""
+
     def __init__(self, ws):
         """Init LifeSmart Update Manager."""
         threading.Thread.__init__(self)

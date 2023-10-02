@@ -148,36 +148,36 @@ class LifeSmartClimateDevice(LifeSmartDevice, ClimateEntity):
         new_temp = int(kwargs["temperature"] * 10)
         _LOGGER.info("set_temperature: %s", str(new_temp))
         if self._devtype in AIR_TYPES:
-            await super().async_lifesmart_epset(self, "0x88", new_temp, "tT")
+            await super().async_lifesmart_epset("0x88", new_temp, "tT")
         else:
-            await super().async_lifesmart_epset(self, "0x88", new_temp, "P3")
+            await super().async_lifesmart_epset("0x88", new_temp, "P3")
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
-        await super().async_lifesmart_epset(self, "0xCE", GET_FAN_SPEED[fan_mode], "F")
+        await super().async_lifesmart_epset("0xCE", GET_FAN_SPEED[fan_mode], "F")
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target operation mode."""
         if self._devtype in AIR_TYPES:
             if hvac_mode == HVAC_MODE_OFF:
-                await super().async_lifesmart_epset(self, "0x80", 0, "O")
+                await super().async_lifesmart_epset("0x80", 0, "O")
                 return
             if self._mode == HVAC_MODE_OFF:
-                if await super().async_lifesmart_epset(self, "0x81", 1, "O") == 0:
+                if await super().async_lifesmart_epset("0x81", 1, "O") == 0:
                     time.sleep(2)
                 else:
                     return
             await super().async_lifesmart_epset(
-                self, "0xCE", LIFESMART_STATE_LIST.index(hvac_mode), "MODE"
+                "0xCE", LIFESMART_STATE_LIST.index(hvac_mode), "MODE"
             )
         else:
             if hvac_mode == HVAC_MODE_OFF:
-                await super().async_lifesmart_epset(self, "0x80", 0, "P1")
+                await super().async_lifesmart_epset("0x80", 0, "P1")
                 time.sleep(1)
-                await super().async_lifesmart_epset(self, "0x80", 0, "P2")
+                await super().async_lifesmart_epset("0x80", 0, "P2")
                 return
             else:
-                if await super().async_lifesmart_epset(self, "0x81", 1, "P1") == 0:
+                if await super().async_lifesmart_epset("0x81", 1, "P1") == 0:
                     time.sleep(2)
                 else:
                     return

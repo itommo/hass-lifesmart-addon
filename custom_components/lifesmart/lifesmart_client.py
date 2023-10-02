@@ -3,8 +3,6 @@ import logging
 import time
 import hashlib
 import json
-import ssl
-import websockets
 import aiohttp
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,10 +29,7 @@ class LifeSmartClient:
         """Get all devices belong to current user."""
         url = self.get_api_url() + "/api.EpGetAll"
         tick = int(time.time())
-        sdata = (
-            "method:EpGetAll,"
-            + self.generate_time_and_credential_data(tick)
-        )
+        sdata = "method:EpGetAll," + self.generate_time_and_credential_data(tick)
 
         send_values = {
             "id": 1,
@@ -83,8 +78,10 @@ class LifeSmartClient:
         sdata = (
             "method:SceneSet,agt:"
             + agt
-            + ",id:" + id
-            + "," + self.generate_time_and_credential_data(tick)
+            + ",id:"
+            + id
+            + ","
+            + self.generate_time_and_credential_data(tick)
         )
         send_values = {
             "id": 101,
@@ -141,25 +138,50 @@ class LifeSmartClient:
         response = json.loads(await self.post_async(url, send_data, header))
         return response
 
-    async def send_ir_ackey_async(self, agt, ai, me, category, brand, key, power, mode, temp, wind, swing, ):
+    async def send_ir_ackey_async(
+        self,
+        agt,
+        ai,
+        me,
+        category,
+        brand,
+        key,
+        power,
+        mode,
+        temp,
+        wind,
+        swing,
+    ):
         """Send an IR AIR Conditioner Key to a specific device."""
         url = self.get_api_url() + "/irapi.SendACKeys"
         tick = int(time.time())
         # keys = str(keys)
         sdata = (
             "method:SendACKeys"
-            + ",agt:" + agt
-            + ",ai:" + ai
-            + ",brand:" + brand
-            + ",category:" + category
-            + ",key:" + key
-            + ",me:" + me
-            + ",mode:" + str(mode)
-            + ",power:" + str(power)
-            + ",swing:" + str(swing)
-            + ",temp:" + str(temp)
-            + ",wind:" + str(wind)
-            + "," + self.generate_time_and_credential_data(tick)
+            + ",agt:"
+            + agt
+            + ",ai:"
+            + ai
+            + ",brand:"
+            + brand
+            + ",category:"
+            + category
+            + ",key:"
+            + key
+            + ",me:"
+            + me
+            + ",mode:"
+            + str(mode)
+            + ",power:"
+            + str(power)
+            + ",swing:"
+            + str(swing)
+            + ",temp:"
+            + str(temp)
+            + ",wind:"
+            + str(wind)
+            + ","
+            + self.generate_time_and_credential_data(tick)
         )
         _LOGGER.debug("sendackey: %s", str(sdata))
         send_values = {
@@ -193,12 +215,18 @@ class LifeSmartClient:
         tick = int(time.time())
         sdata = (
             "method:EpSet"
-            + ",agt:" + agt
-            + ",idx:" + idx
-            + ",me:" + me
-            + ",type:" + type
-            + ",val:" + str(val)
-            + "," + self.generate_time_and_credential_data(tick)
+            + ",agt:"
+            + agt
+            + ",idx:"
+            + idx
+            + ",me:"
+            + me
+            + ",type:"
+            + type
+            + ",val:"
+            + str(val)
+            + ","
+            + self.generate_time_and_credential_data(tick)
         )
         send_values = {
             "id": 1,
@@ -291,7 +319,7 @@ class LifeSmartClient:
         return response["message"]["codes"]
 
     async def post_async(self, url, data, headers):
-        """ Async method to make a POST api call"""
+        """Async method to make a POST api call"""
         async with aiohttp.ClientSession() as session:
             async with session.post(url, data=data, headers=headers) as response:
                 response_text = await response.text()
@@ -323,11 +351,18 @@ class LifeSmartClient:
     def generate_time_and_credential_data(self, tick):
         """Generate default parameter required in body"""
 
-        return ("time:" + str(tick)
-                + ",userid:" + self._userid
-                + ",usertoken:" + self._usertoken
-                + ",appkey:" + self._appkey
-                + ",apptoken:" + self._apptoken)
+        return (
+            "time:"
+            + str(tick)
+            + ",userid:"
+            + self._userid
+            + ",usertoken:"
+            + self._usertoken
+            + ",appkey:"
+            + self._appkey
+            + ",apptoken:"
+            + self._apptoken
+        )
 
     def generate_header(self):
         """Generate default http header required by LifeSmart"""
@@ -336,10 +371,7 @@ class LifeSmartClient:
     def generate_wss_auth(self):
         """Generate authentication message with signature for wss connection"""
         tick = int(time.time())
-        sdata = (
-            "method:WbAuth,"
-            + self.generate_time_and_credential_data(tick)
-        )
+        sdata = "method:WbAuth," + self.generate_time_and_credential_data(tick)
 
         send_values = {
             "id": 1,
