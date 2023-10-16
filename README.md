@@ -38,6 +38,15 @@ How to install:
     ```
  Installation via HACS will be supported soon. 
 
+Example
+---
+![Alt text](./docs/example-configuration.png)
+![Alt text](./docs/example-image.png)
+![Alt text](./docs/example-image-4.png)
+![Alt text](./docs/example-image-2.png)
+![Alt text](./docs/example-image-3.png)
+
+
 Supported devices:
 ---
 Since there are a lot of refactored and code changes, some old device removed from supported list for now. 
@@ -132,14 +141,6 @@ Smart Plug:
 | ~~SL_OL_THE~~ | |
 | ~~SL_OL_3C~~ | |
 | ~~SL_O~~L | |
-
-Example
----
-![Alt text](./docs/example-configuration.png)
-![Alt text](./docs/example-image.png)
-![Alt text](./docs/example-image-4.png)
-![Alt text](./docs/example-image-2.png)
-![Alt text](./docs/example-image-3.png)
 
 
 This project is forked/combined from serveral projects below 
