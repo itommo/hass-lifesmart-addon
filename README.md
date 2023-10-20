@@ -42,7 +42,7 @@ How to install:
 
 
 ### HACS with Custom repository (Recommended)
-1. Go to HACS > Integration > choose Custom Repository
+1. Go to HACS > Integration > 3 dots menu at the top right > choose Custom Repository
 
    ![HACS Custom Repository](https://github.com/iKaew/hass-lifesmart-addon/assets/6348112/2499f1f5-f973-40db-8bf5-76b08e3faa1d)
 1. In custom repository dialog enter 
