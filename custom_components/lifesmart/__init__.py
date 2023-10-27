@@ -195,15 +195,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                 attrs = hass.states.get(entity_id).attributes
                 hass.states.set(entity_id, data["val"], attrs)
             elif device_type in SPOT_TYPES or device_type in LIGHT_SWITCH_TYPES:
-                attrs = dict(hass.states.get(entity_id).attributes)
+                #attrs = dict(hass.states.get(entity_id).attributes)
                 _LOGGER.debug("websocket_light_msg: %s ", str(msg))
-                _LOGGER.debug("websocket_light_attrs: %s", str(attrs))
+                #_LOGGER.debug("websocket_light_attrs: %s", str(attrs))
                 value = data["val"]
                 idx = sub_device_key
 
                 dispatcher_send(
                     hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
                 )
+                """
                 if idx in ["HS"]:
                     if value == 0:
                         attrs[ATTR_HS_COLOR] = None
@@ -234,7 +235,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                     # convert from wrgb to rgbw tuple
                     attrs[ATTR_RGBW_COLOR] = rgbhex[1:] + (rgbhex[0],)
                     _LOGGER.info("RGBW: %s", str(attrs[ATTR_RGBW_COLOR]))
-
+                """
 
             elif device_type in LIGHT_DIMMER_TYPES:
                 attrs = dict(hass.states.get(entity_id).attributes)
@@ -391,12 +392,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                     device_type + "_" + hub_id + "_" + device_id + "_" + sub_device_key
                 ).lower()
             )
+            """
             attrs = hass.states.get(entity_id).attributes
 
             if data["stat"] == 3:
                 hass.states.set(entity_id, STATE_ON, attrs)
             elif data["stat"] == 4:
                 hass.states.set(entity_id, STATE_OFF, attrs)
+            """
 
     def on_message(ws, message):
         _LOGGER.debug("websocket_msg: %s", str(message))
