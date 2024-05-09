@@ -31,14 +31,12 @@ DATA_SCHEMA = {
     vol.Required(CONF_LIFESMART_APPTOKEN): str,
     vol.Required(CONF_LIFESMART_USERID): str,
     vol.Required(CONF_LIFESMART_USERPASSWORD): str,
-    # vol.Required(CONF_REGION): str,
+    vol.Required(CONF_REGION): selector(LIFESMART_REGION_OPTIONS),
     vol.Optional(CONF_EXCLUDE_ITEMS): str,
     vol.Optional(CONF_EXCLUDE_AGTS): str,
     vol.Optional(CONF_AI_INCLUDE_AGTS): str,
     vol.Optional(CONF_AI_INCLUDE_ITEMS): str,
 }
-
-DATA_SCHEMA[CONF_REGION] = selector(LIFESMART_REGION_OPTIONS)
 
 
 async def validate_input(hass, data):
@@ -161,6 +159,10 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_LIFESMART_USERPASSWORD,
                 default=self.config_entry.data.get(CONF_LIFESMART_USERPASSWORD),
             ): str,
+            vol.Required(
+                CONF_REGION,
+                default=self.config_entry.data.get(CONF_REGION),
+            ): selector(LIFESMART_REGION_OPTIONS),
             vol.Optional(
                 CONF_EXCLUDE_ITEMS,
                 default=self.config_entry.data.get(CONF_EXCLUDE_ITEMS, ""),
@@ -178,8 +180,6 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
                 default=self.config_entry.data.get(CONF_AI_INCLUDE_ITEMS, ""),
             ): str,
         }
-
-        schema[CONF_REGION] = selector(LIFESMART_REGION_OPTIONS)
 
         return self.async_show_form(
             step_id="user",
@@ -210,6 +210,10 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_LIFESMART_USERPASSWORD,
                 default=self.config_entry.data.get(CONF_LIFESMART_USERPASSWORD),
             ): str,
+            vol.Required(
+                CONF_REGION,
+                default=self.config_entry.data.get(CONF_REGION),
+            ): selector(LIFESMART_REGION_OPTIONS),
             vol.Optional(
                 CONF_EXCLUDE_ITEMS,
                 default=self.config_entry.data.get(CONF_EXCLUDE_ITEMS, ""),
@@ -227,8 +231,6 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
                 default=self.config_entry.data.get(CONF_AI_INCLUDE_ITEMS, ""),
             ): str,
         }
-
-        schema[CONF_REGION] = selector(LIFESMART_REGION_OPTIONS).CONFIG_SCHEMA
 
         return self.async_show_form(
             step_id="user",
