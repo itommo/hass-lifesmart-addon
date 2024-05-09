@@ -1,13 +1,12 @@
+"""lifesmart by @ikaew."""
 import logging
-from typing import Any
 
 import voluptuous as vol
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_REGION
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import selector
 
 from .const import (
@@ -98,7 +97,7 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 validated = await validate_input(self.hass, user_input)
-            except:
+            except Exception:
                 _LOGGER.warning("Input validation error")
 
             if "base" not in errors:
@@ -132,7 +131,7 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             try:
                 validated = await validate_input(self.hass, user_input)
-            except:
+            except Exception:
                 _LOGGER.warning("Input validation error")
 
             if "base" not in errors:

@@ -1,3 +1,4 @@
+"""lifesmart by @ikaew."""
 from homeassistant.components import climate
 from homeassistant.const import Platform
 

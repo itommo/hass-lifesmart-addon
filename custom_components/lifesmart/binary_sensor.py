@@ -2,11 +2,9 @@
 import logging
 
 from homeassistant.components.binary_sensor import (
-    ENTITY_ID_FORMAT,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 
@@ -31,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Setup Switch entities."""
+    """Initialzie Switch entities for HA."""
     devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
     exclude_devices = hass.data[DOMAIN][config_entry.entry_id]["exclude_devices"]
     exclude_hubs = hass.data[DOMAIN][config_entry.entry_id]["exclude_hubs"]
@@ -70,7 +68,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             client,
                         )
                     )
-            elif device_type in LOCK_TYPES and sub_device_key == "EVTLO":
+            elif device_type in LOCK_TYPES and sub_device_key == "EVTLO":  # noqa: SIM114
                 sensor_devices.append(
                     LifeSmartBinarySensor(
                         ha_device,
@@ -102,7 +100,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class LifeSmartBinarySensor(BinarySensorEntity):
     """Representation of LifeSmartBinarySensor."""
 
-    def __init__(
+    def __init__(  # noqa: D107
         self, device, raw_device_data, sub_device_key, sub_device_data, client
     ) -> None:
         super().__init__()

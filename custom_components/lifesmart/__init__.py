@@ -1,20 +1,12 @@
 """lifesmart by @ikaew."""
 import asyncio
 import datetime
-import hashlib
 import json
 import logging
-import struct
-import subprocess
 import sys
 import threading
 import time
-from typing import Final
-from unittest import case
-import urllib.request
 
-import aiohttp
-import voluptuous as vol
 import websocket
 
 from homeassistant.components import climate
@@ -22,33 +14,16 @@ from homeassistant.components.climate import FAN_HIGH, FAN_LOW, FAN_MEDIUM
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
-    ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
-    ATTR_RGB_COLOR,
-    ATTR_RGBW_COLOR,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_FRIENDLY_NAME,
-    CONF_REGION,
-    CONF_URL,
-    STATE_OFF,
-    STATE_ON,
-    Platform,
-)
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_REGION, STATE_OFF, STATE_ON, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.entity import DeviceInfo, Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.color as color_util
-from homeassistant.util.dt import utcnow
+from homeassistant.helpers.entity import Entity
 
 from .const import (
-    AI_TYPES,
     BINARY_SENSOR_TYPES,
     CLIMATE_TYPES,
     CONF_AI_INCLUDE_AGTS,
@@ -59,17 +34,13 @@ from .const import (
     CONF_LIFESMART_APPTOKEN,
     CONF_LIFESMART_USERID,
     CONF_LIFESMART_USERPASSWORD,
-    CONF_LIFESMART_USERTOKEN,
     COVER_TYPES,
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
     DEVICE_TYPE_KEY,
-    DEVICE_WITHOUT_IDXNAME,
     DOMAIN,
     EV_SENSOR_TYPES,
     GAS_SENSOR_TYPES,
-    GENERIC_CONTROLLER_TYPES,
-    GUARD_SENSOR_TYPES,
     HUB_ID_KEY,
     LIFESMART_HVAC_STATE_LIST,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
@@ -96,6 +67,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Initialize a setup of the lifesamrt addon."""
     hass.data.setdefault(DOMAIN, {})
 
     app_key = config_entry.data.get(CONF_LIFESMART_APPKEY)
@@ -164,7 +136,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                 device_type, hub_id, device_id, sub_device_key
             )
 
-            if (
+            if (  # noqa: SIM114
                 device_type in SUPPORTED_SWTICH_TYPES
                 and sub_device_key in SUPPORTED_SUB_SWITCH_TYPES
             ):
@@ -191,11 +163,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                         nstat = "open"
                     else:
                         nstat = "closed"
+                elif nval & 0x80 == 0x80:
+                    nstat = "opening"
                 else:
-                    if nval & 0x80 == 0x80:
-                        nstat = "opening"
-                    else:
-                        nstat = "closing"
+                    nstat = "closing"
                 hass.states.set(entity_id, nstat, attrs)
             elif device_type in EV_SENSOR_TYPES:
                 attrs = hass.states.get(entity_id).attributes
@@ -302,11 +273,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                     if data["type"] == 206:
                         attrs["fan_mode"] = get_fan_mode(data["val"])
                         hass.states.set(entity_id, nstat, attrs)
-                elif _idx == "tT" or _idx == "P3":
+                elif _idx == "tT" or _idx == "P3":  # noqa: PLR1714
                     if data["type"] == 136:
                         attrs["temperature"] = data["v"]
                         hass.states.set(entity_id, nstat, attrs)
-                elif _idx == "T" or _idx == "P4":
+                elif _idx == "T" or _idx == "P4":  # noqa: PLR1714
                     if data["type"] == 8 or data["type"] == 9:
                         attrs["current_temperature"] = data["v"]
                         hass.states.set(entity_id, nstat, attrs)
@@ -559,25 +530,25 @@ class LifeSmartDevice(Entity):
 
     @property
     def should_poll(self):
-        """check with the entity for an updated state."""
+        """Check with the entity for an updated state."""
         return False
 
     async def async_lifesmart_epset(self, type, val, idx):
-        """Send command to lifesmart device"""
+        """Send command to lifesmart device."""
         agt = self._agt
         me = self._me
         responsecode = await self._client.send_epset_async(type, val, idx, agt, me)
         return responsecode
 
     async def async_lifesmart_epget(self):
-        """Get lifesmart device info"""
+        """Get lifesmart device info."""
         agt = self._agt
         me = self._me
         response = await self._client.get_epget_async(agt, me)
         return response
 
     async def async_lifesmart_sceneset(self, type, rgbw):
-        """Set the scene"""
+        """Set the scene."""
         agt = self._agt
         id = self._me
         response = self._client.set_scene_async(agt, id)
@@ -585,7 +556,7 @@ class LifeSmartDevice(Entity):
 
 
 class LifeSmartStatesManager(threading.Thread):
-    """Instance to manage websocket to get push data from LifeSmart service"""
+    """Instance to manage websocket to get push data from LifeSmart service."""
 
     def __init__(self, ws) -> None:
         """Init LifeSmart Update Manager."""
@@ -594,7 +565,7 @@ class LifeSmartStatesManager(threading.Thread):
         self._lock = threading.Lock()
         self._ws = ws
 
-    def run(self):
+    def run(self):  # noqa: D102
         while self._run:
             _LOGGER.debug("lifesmart: starting wss")
             self._ws.run_forever()
@@ -615,6 +586,7 @@ class LifeSmartStatesManager(threading.Thread):
 
 
 def get_fan_mode(_fanspeed):
+    """Convert fan speed to fan mode."""
     fanmode = None
     if _fanspeed < 30:
         fanmode = FAN_LOW
@@ -626,6 +598,7 @@ def get_fan_mode(_fanspeed):
 
 
 def get_platform_by_device(device_type, sub_device=None):
+    """Convert lifesmart device subtype tp HA device type."""
     if device_type in SUPPORTED_SWTICH_TYPES:
         return Platform.SWITCH
     elif device_type in BINARY_SENSOR_TYPES:
@@ -650,6 +623,7 @@ def get_platform_by_device(device_type, sub_device=None):
 
 
 def generate_entity_id(device_type, hub_id, device_id, idx=None):
+    """Generate unique id for entity in HA."""
     hub_id = hub_id.replace("__", "_").replace("-", "_")
     if idx:
         sub_device = idx
