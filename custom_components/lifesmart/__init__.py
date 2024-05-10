@@ -282,7 +282,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                         attrs["current_temperature"] = data["v"]
                         hass.states.set(entity_id, nstat, attrs)
             elif device_type in LOCK_TYPES:
-                if sub_device_key == "BAT":
+                if sub_device_key in ["BAT", "ALM"]:
                     dispatcher_send(
                         hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
                     )
@@ -613,7 +613,12 @@ def get_platform_by_device(device_type, sub_device=None):
         return Platform.CLIMATE
     elif device_type in LOCK_TYPES and sub_device == "BAT":
         return Platform.SENSOR
-    elif device_type in LOCK_TYPES and sub_device == "EVTLO":
+    elif (
+        device_type in LOCK_TYPES
+        and sub_device == "EVTLO"
+        or device_type in LOCK_TYPES
+        and sub_device == "ALM"
+    ):
         return Platform.BINARY_SENSOR
     elif device_type in SMART_PLUG_TYPES and sub_device == "P1":
         return Platform.SWITCH

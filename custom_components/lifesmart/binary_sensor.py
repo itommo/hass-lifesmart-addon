@@ -78,6 +78,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         client,
                     )
                 )
+            elif device_type in LOCK_TYPES and sub_device_key == "ALM":  # noqa: SIM114
+                sensor_devices.append(
+                    LifeSmartBinarySensor(
+                        ha_device,
+                        device,
+                        sub_device_key,
+                        sub_device_data,
+                        client,
+                    )
+                )
             elif device_type in BINARY_SENSOR_TYPES and sub_device_key in [
                 "M",
                 "G",
@@ -157,7 +167,8 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 self._state = False
             else:
                 self._state = True
-        elif device_type in LOCK_TYPES:
+        elif device_type in LOCK_TYPES and sub_device_key == "EVTLO":
+            self.device_name = "Lock Status"
             self._device_class = BinarySensorDeviceClass.LOCK
             # On means open (unlocked), Off means closed (locked)
             val = sub_device_data["val"]
@@ -180,6 +191,17 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 "device_type": device_type,
                 "unlocking_success": is_unlock_success,
             }
+        elif device_type in LOCK_TYPES and sub_device_key == "ALM":
+            self.device_name = "Alarm"
+            self._device_class = BinarySensorDeviceClass.PROBLEM
+            # On means problem detected, Off means no problem (OK)
+            val = sub_device_data["val"]
+            if val > 0:
+                self._state = True
+            else:
+                self._state = False
+            self._attrs = {"raw": val}
+
         elif device_type in GENERIC_CONTROLLER_TYPES:
             self._device_class = BinarySensorDeviceClass.LOCK
             # On means open (unlocked), Off means closed (locked)
