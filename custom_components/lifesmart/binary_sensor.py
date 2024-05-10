@@ -168,7 +168,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             else:
                 self._state = True
         elif device_type in LOCK_TYPES and sub_device_key == "EVTLO":
-            self.device_name = "Lock Status"
+            self.device_name = "Status"
             self._device_class = BinarySensorDeviceClass.LOCK
             # On means open (unlocked), Off means closed (locked)
             val = sub_device_data["val"]
