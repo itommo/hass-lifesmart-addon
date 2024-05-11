@@ -181,7 +181,8 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 and unlock_method != 15
             ):
                 is_unlock_success = True
-            if sub_device_data["type"] % 2 == 1:
+
+            if sub_device_data["type"] % 2 == 0:
                 self._state = True
             else:
                 self._state = False
@@ -260,8 +261,12 @@ class LifeSmartBinarySensor(BinarySensorEntity):
 
     async def _update_state(self, data) -> None:
         if data is not None:
-            if data["val"] == 0:
-                self._state = True
-            else:
-                self._state = False
-            self.schedule_update_ha_state()
+            if isinstance(data, (dict)):
+                if data["val"] == 0:
+                    self._state = True
+                else:
+                    self._state = False
+                self.schedule_update_ha_state()
+            elif isinstance(data, (bool)):
+                self._state = data
+                self.schedule_update_ha_state()
