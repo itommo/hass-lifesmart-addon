@@ -318,18 +318,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                     val = data["val"]
                     unlock_method = val >> 12
                     unlock_user = val & 0xFFF
-                    is_locked = True
+                    is_unlock_success = False
                     if (
                         data["type"] % 2 == 1
-                        and unlock_user != 0
-                        and unlock_method != 15
+                        #and unlock_user != 0
+                        #and unlock_method != 15
                     ):
-                        is_locked = False
+                        is_unlock_success = True
                     attrs = {
                         "unlocking_method": unlock_method,
                         "unlocking_user": unlock_user,
                         "device_type": device_type,
-                        "unlocking_success": is_locked,
+                        "unlocking_success": is_unlock_success,
                         "last_updated": datetime.datetime.fromtimestamp(
                             data["ts"] / 1000
                         ).strftime("%Y-%m-%d %H:%M:%S"),
@@ -338,7 +338,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                     dispatcher_send(
                         hass,
                         f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}",
-                        is_locked,
+                        is_unlock_success,
                     )
             elif device_type in OT_SENSOR_TYPES and sub_device_key in [
                 "Z",

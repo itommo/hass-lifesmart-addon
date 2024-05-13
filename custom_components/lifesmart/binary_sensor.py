@@ -182,7 +182,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             ):
                 is_unlock_success = True
 
-            if sub_device_data["type"] % 2 == 0:
+            if sub_device_data["type"] % 2 == 1:
                 self._state = True
             else:
                 self._state = False
