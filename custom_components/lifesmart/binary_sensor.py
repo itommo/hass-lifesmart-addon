@@ -1,6 +1,7 @@
 """Support for LifeSmart binary sensors."""
 import logging
 
+from homeassistant.components import datetime
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -23,6 +24,7 @@ from .const import (
     LOCK_TYPES,
     MANUFACTURER,
     MOTION_SENSOR_TYPES,
+    SUBDEVICE_INDEX_KEY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -260,13 +262,63 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         )
 
     async def _update_state(self, data) -> None:
-        if data is not None:
-            if isinstance(data, (dict)):
-                if data["val"] == 0:
-                    self._state = True
-                else:
-                    self._state = False
-                self.schedule_update_ha_state()
-            elif isinstance(data, (bool)):
-                self._state = data
-                self.schedule_update_ha_state()
+        if data is None:
+            return
+
+        device_type = data[DEVICE_TYPE_KEY]
+        sub_device_key = data[SUBDEVICE_INDEX_KEY]
+
+        if device_type in LOCK_TYPES and sub_device_key == "EVTLO":
+            """
+                type%2==1 means open;
+                type%2==0 means closed;
+                The val value is defined as follows:
+                Bit0~11 represents the user number;
+                Bit12~15 indicates the unlocking method: (
+                0: undefined;
+                1: Password;
+                2: Fingerprint;
+                3: NFC;
+                4: Mechanical key;
+                5: Remote unlocking;
+                6: One-button opening (12V unlocking signal turns on
+                Lock);
+                7: APP is opened;
+                8: Bluetooth unlocking;
+                9: Manual unlock;
+                15: Error)
+                Bit16~27 represents the user number;
+                Bit28~31 indicates the unlocking method: (same as above)
+                Meaning) (Note: There may be two ways at the same time
+                When the door lock is opened, bits 0~15 are
+                Unlock information, other bits are 0; bit 0 when double opening
+                ~15 and bit16~31 are the corresponding unlocks respectively.
+                information)
+                """
+
+            val = data["val"]
+            unlock_method = val >> 12
+            unlock_user = val & 0xFFF
+            is_unlock_success = False
+            if data["type"] % 2 == 1:
+                is_unlock_success = True
+            attrs = {
+                "unlocking_method": unlock_method,
+                "unlocking_user": unlock_user,
+                "device_type": device_type,
+                "unlocking_success": is_unlock_success,
+                "last_updated": datetime.datetime.fromtimestamp(
+                    data["ts"] / 1000
+                ).strftime("%Y-%m-%d %H:%M:%S"),
+            }
+            self._state = is_unlock_success
+            self._attrs = attrs
+            self.schedule_update_ha_state()
+
+            _LOGGER.debug(attrs)
+        else:
+            if data["val"] == 0:
+                self._state = True
+            else:
+                self._state = False
+            self.schedule_update_ha_state()

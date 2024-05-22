@@ -284,61 +284,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                         attrs["current_temperature"] = data["v"]
                         hass.states.set(entity_id, nstat, attrs)
             elif device_type in LOCK_TYPES:
-                if sub_device_key in ["BAT", "ALM"]:
+                if sub_device_key in ["BAT", "ALM"] or sub_device_key == "EVTLO":
                     dispatcher_send(
                         hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
-                    )
-                elif sub_device_key == "EVTLO":
-                    """
-                    type%2==1 means open;
-                    type%2==0 means closed;
-                    The val value is defined as follows:
-                    Bit0~11 represents the user number;
-                    Bit12~15 indicates the unlocking method: (
-                    0: undefined;
-                    1: Password;
-                    2: Fingerprint;
-                    3: NFC;
-                    4: Mechanical key;
-                    5: Remote unlocking;
-                    6: One-button opening (12V unlocking signal turns on
-                    Lock);
-                    7: APP is opened;
-                    8: Bluetooth unlocking;
-                    9: Manual unlock;
-                    15: Error)
-                    Bit16~27 represents the user number;
-                    Bit28~31 indicates the unlocking method: (same as above)
-                    Meaning) (Note: There may be two ways at the same time
-                    When the door lock is opened, bits 0~15 are
-                    Unlock information, other bits are 0; bit 0 when double opening
-                    ~15 and bit16~31 are the corresponding unlocks respectively.
-                    information)
-                    """
-                    val = data["val"]
-                    unlock_method = val >> 12
-                    unlock_user = val & 0xFFF
-                    is_unlock_success = False
-                    if (
-                        data["type"] % 2 == 1
-                        #and unlock_user != 0
-                        #and unlock_method != 15
-                    ):
-                        is_unlock_success = True
-                    attrs = {
-                        "unlocking_method": unlock_method,
-                        "unlocking_user": unlock_user,
-                        "device_type": device_type,
-                        "unlocking_success": is_unlock_success,
-                        "last_updated": datetime.datetime.fromtimestamp(
-                            data["ts"] / 1000
-                        ).strftime("%Y-%m-%d %H:%M:%S"),
-                    }
-
-                    dispatcher_send(
-                        hass,
-                        f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}",
-                        is_unlock_success,
                     )
             elif device_type in OT_SENSOR_TYPES and sub_device_key in [
                 "Z",
