@@ -1,5 +1,6 @@
 """Support for LifeSmart binary sensors."""
 import logging
+from typing import Any
 
 from homeassistant.components import datetime
 from homeassistant.components.binary_sensor import (
@@ -16,6 +17,8 @@ from .const import (
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
     DEVICE_TYPE_KEY,
+    DIGITAL_DOORLOCK_ALARM_EVENT_KEY,
+    DIGITAL_DOORLOCK_LOCK_EVENT_KEY,
     DOMAIN,
     GENERIC_CONTROLLER_TYPES,
     GUARD_SENSOR_TYPES,
@@ -70,7 +73,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                             client,
                         )
                     )
-            elif device_type in LOCK_TYPES and sub_device_key == "EVTLO":  # noqa: SIM114
+            elif (
+                device_type in LOCK_TYPES
+                and sub_device_key == DIGITAL_DOORLOCK_LOCK_EVENT_KEY
+            ):  # noqa: SIM114
                 sensor_devices.append(
                     LifeSmartBinarySensor(
                         ha_device,
@@ -80,7 +86,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         client,
                     )
                 )
-            elif device_type in LOCK_TYPES and sub_device_key == "ALM":  # noqa: SIM114
+            elif (
+                device_type in LOCK_TYPES
+                and sub_device_key == DIGITAL_DOORLOCK_ALARM_EVENT_KEY
+            ):  # noqa: SIM114
                 sensor_devices.append(
                     LifeSmartBinarySensor(
                         ha_device,
@@ -142,7 +151,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             device_type, hub_id, device_id, sub_device_key
         )
         self._client = client
-        self._attrs = sub_device_data
+        # self._attrs = sub_device_data
 
         if device_type in GUARD_SENSOR_TYPES:
             if sub_device_key in ["G"]:
@@ -169,32 +178,18 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 self._state = False
             else:
                 self._state = True
-        elif device_type in LOCK_TYPES and sub_device_key == "EVTLO":
+        elif (
+            device_type in LOCK_TYPES
+            and sub_device_key == DIGITAL_DOORLOCK_LOCK_EVENT_KEY
+        ):
             self.device_name = "Status"
             self._device_class = BinarySensorDeviceClass.LOCK
-            # On means open (unlocked), Off means closed (locked)
-            val = sub_device_data["val"]
-            unlock_method = val >> 12
-            unlock_user = val & 0xFFF
-            is_unlock_success = False
-            if (
-                sub_device_data["type"] % 2 == 1
-                and unlock_user != 0
-                and unlock_method != 15
-            ):
-                is_unlock_success = True
-
-            if sub_device_data["type"] % 2 == 1:
-                self._state = True
-            else:
-                self._state = False
-            self._attrs = {
-                "unlocking_method": unlock_method,
-                "unlocking_user": unlock_user,
-                "device_type": device_type,
-                "unlocking_success": is_unlock_success,
-            }
-        elif device_type in LOCK_TYPES and sub_device_key == "ALM":
+            self._state = is_doorlock_unlocked(sub_device_data)
+            self._attrs = build_doorlock_attribute(sub_device_data)
+        elif (
+            device_type in LOCK_TYPES
+            and sub_device_key == DIGITAL_DOORLOCK_ALARM_EVENT_KEY
+        ):
             self.device_name = "Alarm"
             self._device_class = BinarySensorDeviceClass.PROBLEM
             # On means problem detected, Off means no problem (OK)
@@ -206,6 +201,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             self._attrs = {"raw": val}
 
         elif device_type in GENERIC_CONTROLLER_TYPES:
+            self._attrs = sub_device_data
             self._device_class = BinarySensorDeviceClass.LOCK
             # On means open (unlocked), Off means closed (locked)
             if sub_device_data["val"] == 0:
@@ -268,13 +264,31 @@ class LifeSmartBinarySensor(BinarySensorEntity):
         device_type = data[DEVICE_TYPE_KEY]
         sub_device_key = data[SUBDEVICE_INDEX_KEY]
 
-        if device_type in LOCK_TYPES and sub_device_key == "EVTLO":
-            """
-                type%2==1 means open;
-                type%2==0 means closed;
-                The val value is defined as follows:
-                Bit0~11 represents the user number;
-                Bit12~15 indicates the unlocking method: (
+        if (
+            device_type in LOCK_TYPES
+            and sub_device_key == DIGITAL_DOORLOCK_LOCK_EVENT_KEY
+        ):
+            self._state = is_doorlock_unlocked(data)
+            self._attrs = build_doorlock_attribute
+            self.schedule_update_ha_state()
+
+            _LOGGER.debug(self._attrs)
+        else:
+            if data["val"] == 0:
+                self._state = True
+            else:
+                self._state = False
+            self.schedule_update_ha_state()
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        return self._attrs
+
+
+def extract_doorlock_unlocking_method(data):
+    """Convert unlock code to meaningful text."""
+    """Unlocking method: (
                 0: undefined;
                 1: Password;
                 2: Fingerprint;
@@ -287,38 +301,51 @@ class LifeSmartBinarySensor(BinarySensorEntity):
                 8: Bluetooth unlocking;
                 9: Manual unlock;
                 15: Error)
-                Bit16~27 represents the user number;
-                Bit28~31 indicates the unlocking method: (same as above)
-                Meaning) (Note: There may be two ways at the same time
-                When the door lock is opened, bits 0~15 are
-                Unlock information, other bits are 0; bit 0 when double opening
-                ~15 and bit16~31 are the corresponding unlocks respectively.
-                information)
-                """
+    """
 
-            val = data["val"]
-            unlock_method = val >> 12
-            unlock_user = val & 0xFFF
-            is_unlock_success = False
-            if data["type"] % 2 == 1:
-                is_unlock_success = True
-            attrs = {
-                "unlocking_method": unlock_method,
-                "unlocking_user": unlock_user,
-                "device_type": device_type,
-                "unlocking_success": is_unlock_success,
-                "last_updated": datetime.datetime.fromtimestamp(
-                    data["ts"] / 1000
-                ).strftime("%Y-%m-%d %H:%M:%S"),
-            }
-            self._state = is_unlock_success
-            self._attrs = attrs
-            self.schedule_update_ha_state()
+    unlock_method_code = data["val"] >> 12
+    match unlock_method_code:
+        case 1:
+            return "Password"
+        case 2:
+            return "Fingerprint"
+        case 3:
+            return "NFC"
+        case 4:
+            return "Mechanical key"
+        case 5:
+            return "Remote unlocking"
+        case 6:
+            return "One-button opening"
+        case 7:
+            return "APP"
+        case 8:
+            return "Bluetooth unlocking"
+        case 9:
+            return "Manual unlock"
+        case 15:
+            return "Error"
+        case _:
+            return "Undefined"
 
-            _LOGGER.debug(attrs)
-        else:
-            if data["val"] == 0:
-                self._state = True
-            else:
-                self._state = False
-            self.schedule_update_ha_state()
+
+def is_doorlock_unlocked(data):
+    """Check if the door is in unlocking state."""
+    return data["type"] % 2 == 1
+
+
+def get_doorlock_unlocking_user(data):
+    """Get user id of who trying to unlock."""
+    val = data["val"]
+    unlocking_user = val & 0xFFF
+    return unlocking_user
+
+
+def build_doorlock_attribute(data):
+    """Build an attribute for digital door lock."""
+    unlocking_user_id = get_doorlock_unlocking_user(data)
+
+    return {
+        "unlocking_method": extract_doorlock_unlocking_method(data),
+        "unlocking_user": unlocking_user_id,
+    }

@@ -38,6 +38,9 @@ from .const import (
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
     DEVICE_TYPE_KEY,
+    DIGITAL_DOORLOCK_ALARM_EVENT_KEY,
+    DIGITAL_DOORLOCK_BATTERY_EVENT_KEY,
+    DIGITAL_DOORLOCK_LOCK_EVENT_KEY,
     DOMAIN,
     EV_SENSOR_TYPES,
     GAS_SENSOR_TYPES,
@@ -284,7 +287,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                         attrs["current_temperature"] = data["v"]
                         hass.states.set(entity_id, nstat, attrs)
             elif device_type in LOCK_TYPES:
-                if sub_device_key in ["BAT", "ALM"] or sub_device_key == "EVTLO":
+                if (
+                    sub_device_key
+                    in [
+                        DIGITAL_DOORLOCK_BATTERY_EVENT_KEY,
+                        DIGITAL_DOORLOCK_ALARM_EVENT_KEY,
+                    ]
+                    or sub_device_key == DIGITAL_DOORLOCK_LOCK_EVENT_KEY
+                ):
                     dispatcher_send(
                         hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
                     )
@@ -563,13 +573,13 @@ def get_platform_by_device(device_type, sub_device=None):
         return Platform.LIGHT
     elif device_type in CLIMATE_TYPES:
         return Platform.CLIMATE
-    elif device_type in LOCK_TYPES and sub_device == "BAT":
+    elif device_type in LOCK_TYPES and sub_device == DIGITAL_DOORLOCK_BATTERY_EVENT_KEY:
         return Platform.SENSOR
     elif (
         device_type in LOCK_TYPES
-        and sub_device == "EVTLO"
+        and sub_device == DIGITAL_DOORLOCK_LOCK_EVENT_KEY
         or device_type in LOCK_TYPES
-        and sub_device == "ALM"
+        and sub_device == DIGITAL_DOORLOCK_ALARM_EVENT_KEY
     ):
         return Platform.BINARY_SENSOR
     elif device_type in SMART_PLUG_TYPES and sub_device == "P1":

@@ -22,6 +22,7 @@ from .const import (
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
     DEVICE_TYPE_KEY,
+    DIGITAL_DOORLOCK_BATTERY_EVENT_KEY,
     DOMAIN,
     GAS_SENSOR_TYPES,
     HUB_ID_KEY,
@@ -88,7 +89,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         client,
                     )
                 )
-            elif device_type in LOCK_TYPES and sub_device_key in ["BAT"]:
+            elif device_type in LOCK_TYPES and sub_device_key in [
+                DIGITAL_DOORLOCK_BATTERY_EVENT_KEY
+            ]:
                 sensor_devices.append(
                     LifeSmartSensor(
                         ha_device,
@@ -163,10 +166,10 @@ class LifeSmartSensor(SensorEntity):
             self._unit = UnitOfPower.WATT
             self._state = sub_device_data["v"]
         else:
-            if sub_device_key == "T" or sub_device_key == "P1":
+            if sub_device_key in ("T", "P1"):
                 self._device_class = SensorDeviceClass.TEMPERATURE
                 self._unit = UnitOfTemperature.CELSIUS
-            elif sub_device_key == "H" or sub_device_key == "P2":
+            elif sub_device_key in ("H", "P2"):
                 self._device_class = SensorDeviceClass.HUMIDITY
                 self._unit = PERCENTAGE
             elif sub_device_key == "Z":
@@ -181,7 +184,7 @@ class LifeSmartSensor(SensorEntity):
             elif sub_device_key == "P4":
                 self._device_class = "None"
                 self._unit = CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER
-            elif sub_device_key == "BAT":
+            elif sub_device_key == DIGITAL_DOORLOCK_BATTERY_EVENT_KEY:
                 self._device_class = SensorDeviceClass.BATTERY
                 self._unit = PERCENTAGE
             else:

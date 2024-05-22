@@ -170,3 +170,7 @@ LIFESMART_REGION_OPTIONS = {
         "options": ["cn0", "cn1", "cn2", "us", "eur", "jp", "apz"],
     }
 }
+
+DIGITAL_DOORLOCK_LOCK_EVENT_KEY = "EVTLO"
+DIGITAL_DOORLOCK_ALARM_EVENT_KEY = "ALM"
+DIGITAL_DOORLOCK_BATTERY_EVENT_KEY = "BAT"
