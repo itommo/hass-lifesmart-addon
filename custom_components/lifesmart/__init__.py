@@ -287,14 +287,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                         attrs["current_temperature"] = data["v"]
                         hass.states.set(entity_id, nstat, attrs)
             elif device_type in LOCK_TYPES:
-                if (
-                    sub_device_key
-                    in [
-                        DIGITAL_DOORLOCK_BATTERY_EVENT_KEY,
-                        DIGITAL_DOORLOCK_ALARM_EVENT_KEY,
-                    ]
-                    or sub_device_key == DIGITAL_DOORLOCK_LOCK_EVENT_KEY
-                ):
+                if sub_device_key in [
+                    DIGITAL_DOORLOCK_BATTERY_EVENT_KEY,
+                    DIGITAL_DOORLOCK_ALARM_EVENT_KEY,
+                    DIGITAL_DOORLOCK_LOCK_EVENT_KEY,
+                ]:
                     dispatcher_send(
                         hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
                     )

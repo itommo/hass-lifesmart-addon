@@ -269,7 +269,7 @@ class LifeSmartBinarySensor(BinarySensorEntity):
             and sub_device_key == DIGITAL_DOORLOCK_LOCK_EVENT_KEY
         ):
             self._state = is_doorlock_unlocked(data)
-            self._attrs = build_doorlock_attribute
+            self._attrs = build_doorlock_attribute(data)
             self.schedule_update_ha_state()
 
             _LOGGER.debug(self._attrs)
