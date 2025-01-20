@@ -13,9 +13,9 @@ from homeassistant.components import climate
 from homeassistant.components.climate import FAN_HIGH, FAN_LOW, FAN_MEDIUM
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
-    ATTR_MAX_MIREDS,
-    ATTR_MIN_MIREDS,
+    ATTR_COLOR_TEMP_KELVIN,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_REGION, STATE_OFF, STATE_ON, Platform
@@ -236,9 +236,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                         hass.states.set(entity_id, STATE_OFF, attrs)
                 elif idx in ["P2"]:
                     ratio = 1 - (value / 255)
-                    attrs[ATTR_COLOR_TEMP] = (
-                        int((attrs[ATTR_MAX_MIREDS] - attrs[ATTR_MIN_MIREDS]) * ratio)
-                        + attrs[ATTR_MIN_MIREDS]
+                    attrs[ATTR_COLOR_TEMP_KELVIN] = (
+                        int((attrs[ATTR_MAX_COLOR_TEMP_KELVIN] - attrs[ATTR_MIN_COLOR_TEMP_KELVIN]) * ratio)
+                        + attrs[ATTR_MIN_COLOR_TEMP_KELVIN]
                     )
                     hass.states.set(entity_id, state, attrs)
 

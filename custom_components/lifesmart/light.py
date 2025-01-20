@@ -11,10 +11,10 @@ import aiohttp
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
-    ATTR_MAX_MIREDS,
-    ATTR_MIN_MIREDS,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ENTITY_ID_FORMAT,
@@ -237,13 +237,13 @@ class LifeSmartLight(LifeSmartDevice, LightEntity):
                 ):
                     self._brightness = kwargs[ATTR_BRIGHTNESS]
                     self.async_schedule_update_ha_state()
-            if ATTR_COLOR_TEMP in kwargs:
-                ratio = (kwargs[ATTR_COLOR_TEMP] - self._min_mireds) / (
+            if ATTR_COLOR_TEMP_KELVIN in kwargs:
+                ratio = (kwargs[ATTR_COLOR_TEMP_KELVIN] - self._min_mireds) / (
                     self._max_mireds - self._min_mireds
                 )
                 val = int((-ratio + 1) * 255)
                 if await super().async_lifesmart_epset("0xcf", val, "P2") == 0:
-                    self._color_temp = kwargs[ATTR_COLOR_TEMP]
+                    self._color_temp = kwargs[ATTR_COLOR_TEMP_KELVIN]
                     self.async_schedule_update_ha_state()
             if await super().async_lifesmart_epset("0x81", 1, "P1") == 0:
                 self._state = True
