@@ -51,6 +51,7 @@ SUPPORTED_SWTICH_TYPES = [
     "SL_SW_IF3",
     "SL_SW_MJ1",
     "SL_SW_MJ2",
+    "SL_SW_MJ3",
     "SL_SW_ND1",
     "SL_SW_ND2",
     "SL_SW_ND3",
@@ -124,6 +125,7 @@ DEVICE_WITHOUT_IDXNAME = [
     "SL_SW_ND3",
     "SL_SW_MJ1",
     "SL_SW_MJ2",
+    "SL_SW_MJ3"
 ]
 GENERIC_CONTROLLER_TYPES = ["SL_P"]
 SMART_PLUG_TYPES = ["SL_OE_DE"]
