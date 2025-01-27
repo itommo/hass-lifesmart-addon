@@ -245,6 +245,10 @@ class LifeSmartClient:
         """Turn on light async."""
         return await self.send_epset_async("0x81", 1, idx, agt, me)
 
+    async def turn_on_light_swith_async(self, idx, agt, me):
+        """Turn on light async."""
+        return await self.send_epset_async("0x81", 1, idx, agt, me)
+
     async def turn_off_light_swith_async(self, idx, agt, me):
         """Turn off light async."""
         return await self.send_epset_async("0x80", 0, idx, agt, me)
@@ -278,6 +282,7 @@ class LifeSmartClient:
         header = self.generate_header()
         send_data = json.dumps(send_values)
 
+        _LOGGER.debug("epset_req: %s", str(send_data))
         response = json.loads(await self.post_async(url, send_data, header))
         _LOGGER.debug("epset_res: %s", str(response))
         return response["code"]

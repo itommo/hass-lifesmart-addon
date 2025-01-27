@@ -1,4 +1,5 @@
 """Support for lifesmart sensors."""
+
 import logging
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -22,6 +23,7 @@ from .const import (
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
     DEVICE_TYPE_KEY,
+    DEVICE_VERSION_KEY,
     DIGITAL_DOORLOCK_BATTERY_EVENT_KEY,
     DOMAIN,
     GAS_SENSOR_TYPES,
@@ -64,7 +66,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
         for sub_device_key in device[DEVICE_DATA_KEY]:
             sub_device_data = device[DEVICE_DATA_KEY][sub_device_key]
-            if device_type in OT_SENSOR_TYPES and sub_device_key in [
+            if device_type in OT_SENSOR_TYPES and sub_device_key in [  # noqa: SIM114
                 "Z",
                 "V",
                 "P3",
@@ -79,7 +81,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         client,
                     )
                 )
-            elif device_type in GAS_SENSOR_TYPES:
+            elif device_type in GAS_SENSOR_TYPES:  # noqa: SIM114
                 sensor_devices.append(
                     LifeSmartSensor(
                         ha_device,
@@ -89,7 +91,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         client,
                     )
                 )
-            elif device_type in LOCK_TYPES and sub_device_key in [
+            elif device_type in LOCK_TYPES and sub_device_key in [  # noqa: SIM114
                 DIGITAL_DOORLOCK_BATTERY_EVENT_KEY
             ]:
                 sensor_devices.append(
@@ -205,7 +207,7 @@ class LifeSmartSensor(SensorEntity):
             name=self.sensor_device_name,
             manufacturer=MANUFACTURER,
             model=self.device_type,
-            sw_version=self.raw_device_data["ver"],
+            sw_version=self.raw_device_data[DEVICE_VERSION_KEY],
             via_device=(DOMAIN, self.hub_id),
         )
 

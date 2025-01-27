@@ -1,6 +1,6 @@
 """lifesmart by @ikaew."""
+
 import asyncio
-import datetime
 import json
 import logging
 import sys
@@ -122,7 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     await hass.config_entries.async_forward_entry_setups(
         config_entry, SUPPORTED_PLATFORMS
-    )   
+    )
 
     async def data_update_handler(msg):
         data = msg["msg"]
@@ -179,48 +179,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                 attrs = hass.states.get(entity_id).attributes
                 hass.states.set(entity_id, data["val"], attrs)
             elif device_type in SPOT_TYPES or device_type in LIGHT_SWITCH_TYPES:
-                # attrs = dict(hass.states.get(entity_id).attributes)
-                _LOGGER.debug("websocket_light_msg: %s ", str(msg))
-                # _LOGGER.debug("websocket_light_attrs: %s", str(attrs))
-                value = data["val"]
-                idx = sub_device_key
-
                 dispatcher_send(
                     hass, f"{LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", data
                 )
-                """
-                if idx in ["HS"]:
-                    if value == 0:
-                        attrs[ATTR_HS_COLOR] = None
-                    else:
-                        rgbhexstr = "%x" % value
-                        rgbhexstr = rgbhexstr.zfill(8)
-                        rgbhex = bytes.fromhex(rgbhexstr)
-                        rgba = struct.unpack("BBBB", rgbhex)
-                        rgb = rgba[1:]
-                        attrs[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb)
-                        _LOGGER.info("HS: %s", str(attrs[ATTR_HS_COLOR]))
-                elif idx in ["RGB_O"]:
-                    if value == 0:
-                        attrs[ATTR_RGB_COLOR] = None
-                    else:
-                        rgbhexstr = "%x" % value
-                        rgbhexstr = rgbhexstr.zfill(8)
-                        rgbhex = bytes.fromhex(rgbhexstr)
-                        rgba = struct.unpack("BBBB", rgbhex)
-                        rgb = rgba[1:]
-                        attrs[ATTR_RGB_COLOR] = rgb
-                        _LOGGER.info("RGB: %s", str(attrs[ATTR_RGB_COLOR]))
-                elif idx in ["RGBW", "RGB"]:
-                    rgbhexstr = "%x" % value
-                    rgbhexstr = rgbhexstr.zfill(8)
-                    rgbhex = bytes.fromhex(rgbhexstr)
-                    rgbhex = struct.unpack("BBBB", rgbhex)
-                    # convert from wrgb to rgbw tuple
-                    attrs[ATTR_RGBW_COLOR] = rgbhex[1:] + (rgbhex[0],)
-                    _LOGGER.info("RGBW: %s", str(attrs[ATTR_RGBW_COLOR]))
-                """
-
             elif device_type in LIGHT_DIMMER_TYPES:
                 attrs = dict(hass.states.get(entity_id).attributes)
                 state = hass.states.get(entity_id).state
@@ -237,7 +198,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
                 elif idx in ["P2"]:
                     ratio = 1 - (value / 255)
                     attrs[ATTR_COLOR_TEMP_KELVIN] = (
-                        int((attrs[ATTR_MAX_COLOR_TEMP_KELVIN] - attrs[ATTR_MIN_COLOR_TEMP_KELVIN]) * ratio)
+                        int(
+                            (
+                                attrs[ATTR_MAX_COLOR_TEMP_KELVIN]
+                                - attrs[ATTR_MIN_COLOR_TEMP_KELVIN]
+                            )
+                            * ratio
+                        )
                         + attrs[ATTR_MIN_COLOR_TEMP_KELVIN]
                     )
                     hass.states.set(entity_id, state, attrs)
@@ -442,7 +409,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     return True
 
 
-async def _async_update_listener(hass, config_entry):
+async def _async_update_listener(hass: HomeAssistant, config_entry):
     """Handle options update."""
     await hass.config_entries.async_reload(config_entry.entry_id)
 
@@ -495,15 +462,13 @@ class LifeSmartDevice(Entity):
         """Send command to lifesmart device."""
         agt = self._agt
         me = self._me
-        responsecode = await self._client.send_epset_async(type, val, idx, agt, me)
-        return responsecode
+        return await self._client.send_epset_async(type, val, idx, agt, me)
 
     async def async_lifesmart_epget(self):
         """Get lifesmart device info."""
         agt = self._agt
         me = self._me
-        response = await self._client.get_epget_async(agt, me)
-        return response
+        return await self._client.get_epget_async(agt, me)
 
     async def async_lifesmart_sceneset(self, type, rgbw):
         """Set the scene."""
@@ -593,7 +558,7 @@ def generate_entity_id(device_type, hub_id, device_id, idx=None):
     else:
         sub_device = None
 
-    if device_type in [
+    if device_type in [  # noqa: RET503
         *SUPPORTED_SWTICH_TYPES,
         *BINARY_SENSOR_TYPES,
         *EV_SENSOR_TYPES,
@@ -618,12 +583,12 @@ def generate_entity_id(device_type, hub_id, device_id, idx=None):
                     + sub_device
                 ).lower()
             )
-        else:
-            return (
-                # no sub device (idx)
-                get_platform_by_device(device_type)
-                + ("." + device_type + "_" + hub_id + "_" + device_id).lower()
-            )
+
+        return (
+            # no sub device (idx)
+            get_platform_by_device(device_type)
+            + ("." + device_type + "_" + hub_id + "_" + device_id).lower()
+        )
 
     elif device_type in COVER_TYPES:
         return (

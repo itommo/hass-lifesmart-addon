@@ -1,4 +1,5 @@
 """lifesmart by @ikaew."""
+
 from homeassistant.components import climate
 from homeassistant.const import Platform
 
@@ -125,7 +126,7 @@ DEVICE_WITHOUT_IDXNAME = [
     "SL_SW_ND3",
     "SL_SW_MJ1",
     "SL_SW_MJ2",
-    "SL_SW_MJ3"
+    "SL_SW_MJ3",
 ]
 GENERIC_CONTROLLER_TYPES = ["SL_P"]
 SMART_PLUG_TYPES = ["SL_OE_DE"]
@@ -144,7 +145,7 @@ SUPPORTED_PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.SENSOR,
     # Platform.COVER,
-    # Platform.LIGHT,
+    Platform.LIGHT,
     # Platform.CLIMATE,
 ]
 CLIMATE_TYPES = ["V_AIR_P", "SL_CP_DN"]
@@ -161,6 +162,7 @@ DEVICE_TYPE_KEY = "devtype"
 HUB_ID_KEY = "agt"
 DEVICE_NAME_KEY = "name"
 DEVICE_DATA_KEY = "data"
+DEVICE_VERSION_KEY = "ver"
 
 LIFESMART_STATE_MANAGER = "lifesmart_wss"
 UPDATE_LISTENER = "update_listener"

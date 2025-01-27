@@ -1,23 +1,18 @@
 """lifesmart switch @skyzhishui"""
-import subprocess
-import urllib.request
-import json
-import time
-import hashlib
+
 import logging
 
-from homeassistant.core import HomeAssistant
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from . import LifeSmartDevice, generate_entity_id
 
+from . import LifeSmartDevice, generate_entity_id
 from .const import (
     DEVICE_DATA_KEY,
     DEVICE_ID_KEY,
     DEVICE_NAME_KEY,
     DEVICE_TYPE_KEY,
+    DEVICE_VERSION_KEY,
     DOMAIN,
     HUB_ID_KEY,
     LIFESMART_SIGNAL_UPDATE_ENTITY,
@@ -26,13 +21,6 @@ from .const import (
     SPOT_TYPES,
     SUPPORTED_SUB_SWITCH_TYPES,
     SUPPORTED_SWTICH_TYPES,
-)
-
-
-from homeassistant.components.switch import (
-    SwitchDeviceClass,
-    SwitchEntity,
-    ENTITY_ID_FORMAT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +37,7 @@ AI_TYPES = ["ai"]
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Setup Switch entities."""
+    """Setup switch entities."""
     devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
     exclude_devices = hass.data[DOMAIN][config_entry.entry_id]["exclude_devices"]
     exclude_hubs = hass.data[DOMAIN][config_entry.entry_id]["exclude_hubs"]
@@ -63,7 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             continue
 
         device_type = device[DEVICE_TYPE_KEY]
-        if device_type in SUPPORTED_SWTICH_TYPES + SMART_PLUG_TYPES + SPOT_TYPES:
+        if device_type in SUPPORTED_SWTICH_TYPES + SMART_PLUG_TYPES:
             ha_device = LifeSmartDevice(
                 device,
                 client,
@@ -82,12 +70,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                         client,
                     )
                 )
-            elif device_type in SPOT_TYPES:
-                sub_device_key = "RGB"
             else:
                 for sub_device_key in device[DEVICE_DATA_KEY]:
                     if sub_device_key in SUPPORTED_SUB_SWITCH_TYPES:
-                        switch_devices.append(
+                        switch_devices.append(  # noqa: PERF401
                             LifeSmartSwitch(
                                 ha_device,
                                 device,
@@ -100,6 +86,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 class LifeSmartSwitch(SwitchEntity):
+    """Switch Entity."""
+
     def __init__(
         self, device, raw_device_data, sub_device_key, sub_device_data, client
     ) -> None:
@@ -110,10 +98,7 @@ class LifeSmartSwitch(SwitchEntity):
         hub_id = raw_device_data[HUB_ID_KEY]
         device_id = raw_device_data[DEVICE_ID_KEY]
 
-        if DEVICE_NAME_KEY in sub_device_data:
-            device_name = sub_device_data[DEVICE_NAME_KEY]
-        else:
-            device_name = ""
+        device_name = sub_device_data.get(DEVICE_NAME_KEY, "")
 
         self._attr_has_entity_name = True
         self.device_name = device_name
@@ -155,7 +140,7 @@ class LifeSmartSwitch(SwitchEntity):
             name=self.switch_name,
             manufacturer=MANUFACTURER,
             model=self.device_type,
-            sw_version=self.raw_device_data["ver"],
+            sw_version=self.raw_device_data[DEVICE_VERSION_KEY],
             via_device=(DOMAIN, self.hub_id),
         )
 
@@ -178,7 +163,7 @@ class LifeSmartSwitch(SwitchEntity):
             self.schedule_update_ha_state()
 
     def _get_state(self):
-        """get lifesmart switch state."""
+        """Get lifesmart switch state."""
         return self._state
 
     async def async_turn_on(self, **kwargs):
@@ -255,7 +240,7 @@ class LifeSmartSceneSwitch(LifeSmartDevice, SwitchEntity):
         """Call when entity is added to hass."""
 
     def _get_state(self):
-        """get lifesmart switch state."""
+        """Get lifesmart switch state."""
         return self._state
 
     async def async_turn_on(self, **kwargs):
