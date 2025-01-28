@@ -72,8 +72,8 @@
           "name": "AGT",
           "description": "Hub Id (agt)."
         },
-        "keys": {
-          "name": "Keys",
+        "ir_code": {
+          "name": "IR Code",
           "description": "IR Code data"
         }
       }
