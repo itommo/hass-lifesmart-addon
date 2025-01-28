@@ -60,6 +60,24 @@
     }
   },
   "services": {
+    "send_ir_code": {
+      "name": "Send IR Codes",
+      "description": "Send IR code to remote device",
+      "fields": {
+        "device_id": {
+          "name": "Device Id",
+          "description": "Device Id (me)."
+        },
+        "hub_id": {
+          "name": "AGT",
+          "description": "Hub Id (agt)."
+        },
+        "keys": {
+          "name": "Keys",
+          "description": "IR Code data"
+        }
+      }
+    },
     "send_keys": {
       "name": "Send Keys",
       "description": "Send IR keys to remote device",

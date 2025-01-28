@@ -219,6 +219,7 @@ class LifeSmartSLSPOTLight(LightEntity):
                 rms = await self._client.get_ir_remote_async(self._hub_id, device_id)
                 rms["category"] = rmlist[device_id]["category"]
                 rms["brand"] = rmlist[device_id]["brand"]
+                rms["idx"] = rmlist[device_id]["idx"]
                 rmdata[device_id] = rms
         _LOGGER.debug("Remote List: %s", str(rmdata))
         self._attributes["remotelist"] = rmdata
@@ -250,6 +251,7 @@ class LifeSmartSLSPOTLight(LightEntity):
             await self._client.turn_on_light_swith_async(
                 self._sub_device_key, self._hub_id, self._device_id
             )
+        self._state = True
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
@@ -267,6 +269,7 @@ class LifeSmartSLSPOTLight(LightEntity):
             await self._client.turn_off_light_swith_async(
                 self._sub_device_key, self._hub_id, self._device_id
             )
+        self._state = False
 
     @property
     def is_on(self):

@@ -1,22 +1,39 @@
+send_ir_code:
+  fields:
+    device_id:
+      required: true
+      example: '0010'
+    hub_id:
+      required: true
+      example: '_xXXXXXXXXXXXXXXXXX'
+    ir_code:
+      required: true
+      example: "018B4F0538016F4F3E57FF57FF7FFDD554FF0001AD8B0360014F6F0340C2"
+
 send_keys:
   description: send IR keys to device.
   fields:
     me:
+      required: true
       description: Device sub id
       example: '0010'
     agt:
+      required: true
       description: Device hub id
       example: '_xXXXXXXXXXXXXXXXXX'
     ai:
       description: Remote control id
       example: 'AI_IR_xxxx_xxxxxxxx'
     category:
+      required: true
       description: Remote control category
       example: 'custom'
     brand:
+      required: true
       description: Target Device brand
       example: 'custom'
     keys:
+      required: true
       description: Command key to be sent
       example: '["key"]'
 

@@ -6,7 +6,9 @@ import logging
 import sys
 import threading
 import time
+from typing import cast
 
+import voluptuous as vol
 import websocket
 
 from homeassistant.components import climate
@@ -65,11 +67,18 @@ from .lifesmart_client import LifeSmartClient
 
 sys.setrecursionlimit(100000)
 
+SEND_IR_CODE_SCHEMA = vol.Schema(
+    {
+        vol.Required("device_id"): str,
+        vol.Required("hub_id"): str,
+        vol.Required("ir_code"): str,
+    }
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):  # noqa: C901
     """Initialize a setup of the lifesamrt addon."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -120,11 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         UPDATE_LISTENER: update_listener,
     }
 
-    await hass.config_entries.async_forward_entry_setups(
-        config_entry, SUPPORTED_PLATFORMS
-    )
-
-    async def data_update_handler(msg):
+    async def data_update_handler(msg):  # noqa: C901
         data = msg["msg"]
         device_type = data[DEVICE_TYPE_KEY]
         hub_id = data[HUB_ID_KEY]
@@ -351,6 +356,22 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         )
         _LOGGER.debug("sendkey: %s", str(restkey))
 
+    async def send_ir_code(call):
+        """Handle the service call."""
+        agt = call.data["hub_id"]
+        me = call.data["device_id"]
+        ir_code = call.data["ir_code"]
+        keys = json.dumps([{"param": {"data": str(ir_code), "type": 1}}])
+        lifesmart_client = cast(
+            LifeSmartClient, hass.data[DOMAIN][config_entry.entry_id]["client"]
+        )
+        restkey = await lifesmart_client.send_ir_code_async(
+            agt,
+            me,
+            keys,
+        )
+        _LOGGER.debug("sendkey: %s", str(restkey))
+
     async def send_ackeys(call):
         """Handle the service call."""
         agt = call.data[HUB_ID_KEY]
@@ -393,20 +414,36 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
         )
         _LOGGER.debug("scene_set: %s", str(restkey))
 
+    hass.services.async_register(
+        DOMAIN, "send_ir_code", send_ir_code, schema=SEND_IR_CODE_SCHEMA
+    )
     hass.services.async_register(DOMAIN, "send_keys", send_keys)
     hass.services.async_register(DOMAIN, "send_ackeys", send_ackeys)
     hass.services.async_register(DOMAIN, "scene_set", scene_set_async)
 
     ws = websocket.WebSocketApp(
         lifesmart_client.get_wss_url(),
+        on_open=on_open,
         on_message=on_message,
         on_error=on_error,
         on_close=on_close,
     )
-    ws.on_open = on_open
     hass.data[DOMAIN][LIFESMART_STATE_MANAGER] = LifeSmartStatesManager(ws=ws)
     hass.data[DOMAIN][LIFESMART_STATE_MANAGER].start_keep_alive()
+
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry, SUPPORTED_PLATFORMS
+    )
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        entry, SUPPORTED_PLATFORMS
+    )
+
+    return unload_ok
 
 
 async def _async_update_listener(hass: HomeAssistant, config_entry):

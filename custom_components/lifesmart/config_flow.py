@@ -1,4 +1,5 @@
 """lifesmart by @ikaew."""
+
 import logging
 
 import voluptuous as vol
@@ -131,7 +132,7 @@ class LifeSmartOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             try:
                 validated = await validate_input(self.hass, user_input)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 _LOGGER.warning("Input validation error")
 
             if "base" not in errors:
