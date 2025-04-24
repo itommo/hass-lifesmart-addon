@@ -36,7 +36,8 @@ How to install:
      appkey: | your appkey|  
      apptoken: | your apptoken| 
      usertoken: | your usertoken|  
-     userid: | your userid| 
+     userid: | your userid|
+     userpassword: | your password that use to login mobile app |
      url: | your api address|  #e.g. api.apz.ilifesmart.com for asia pacific, api.us.ilifesmart.com for US  
     ```
 
@@ -58,9 +59,16 @@ Via HACS should allow you to get new version when it ready.
 
 After the addon stable, I'll push the repo be in deault list of HACS and (long way) later to be included in Official Integration of HA.
 
+
+How to find user id from the mobile app
+---
+![image](https://github.com/user-attachments/assets/3f5f1fd6-1c38-4fd8-a557-9d5bfa5e4a0f)
+
+
 Example
 ---
-![Alt text](./docs/example-configuration.png)
+![image](https://github.com/user-attachments/assets/7d11a957-987c-4084-806e-9ffd16491c7e)
+
 ![Alt text](./docs/example-image.png)
 ![Alt text](./docs/example-image-4.png)
 ![Alt text](./docs/example-image-2.png)
