@@ -95,7 +95,7 @@ class LifeSmartClient:
             "userid": self._userid,
             "token": response["token"],
             "appkey": self._appkey,
-            "rgn": "apz",
+            "rgn": self._region,
         }
         send_data = json.dumps(auth_data)
         response = json.loads(await self.post_async(url, send_data, header))
