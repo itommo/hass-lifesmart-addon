@@ -114,10 +114,66 @@ class LifeSmartConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=validated["title"], data=user_input
                 )
+        # If we are here, the user input is invalid or not provided
+        # Pre-fill the form with the previously entered data if available
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_LIFESMART_APPKEY,
+                    default=user_input.get(CONF_LIFESMART_APPKEY, "")
+                    if user_input
+                    else "",
+                ): str,
+                vol.Required(
+                    CONF_LIFESMART_APPTOKEN,
+                    default=user_input.get(CONF_LIFESMART_APPTOKEN, "")
+                    if user_input
+                    else "",
+                ): str,
+                vol.Required(
+                    CONF_LIFESMART_USERID,
+                    default=user_input.get(CONF_LIFESMART_USERID, "")
+                    if user_input
+                    else "",
+                ): str,
+                vol.Required(
+                    CONF_LIFESMART_USERPASSWORD,
+                    default=user_input.get(CONF_LIFESMART_USERPASSWORD, "")
+                    if user_input
+                    else "",
+                ): str,
+                vol.Required(
+                    CONF_REGION,
+                    default=user_input.get(CONF_REGION, "") if user_input else "",
+                ): selector(LIFESMART_REGION_OPTIONS),
+                vol.Optional(
+                    CONF_EXCLUDE_ITEMS,
+                    default=user_input.get(CONF_EXCLUDE_ITEMS, "")
+                    if user_input
+                    else "",
+                ): str,
+                vol.Optional(
+                    CONF_EXCLUDE_AGTS,
+                    default=user_input.get(CONF_EXCLUDE_AGTS, "") if user_input else "",
+                ): str,
+                vol.Optional(
+                    CONF_AI_INCLUDE_AGTS,
+                    default=user_input.get(CONF_AI_INCLUDE_AGTS, "")
+                    if user_input
+                    else "",
+                ): str,
+                vol.Optional(
+                    CONF_AI_INCLUDE_ITEMS,
+                    default=user_input.get(CONF_AI_INCLUDE_ITEMS, "")
+                    if user_input
+                    else "",
+                ): str,
+            }
+        )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.discovery_info or vol.Schema(DATA_SCHEMA),
+            data_schema=data_schema,
             errors=errors,
         )
 
