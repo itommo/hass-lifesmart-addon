@@ -28,6 +28,7 @@ class LifeSmartClient:
         self._userid = userid
         self._userpassword = userpassword
         self._usertoken = None
+        self._rgn = None
 
     async def get_all_device_async(self):
         """Get all devices belong to current user."""
@@ -89,16 +90,17 @@ class LifeSmartClient:
         if response["code"] != "success":
             return response
 
+        self._userid = response["userid"]
+        self._rgn = response["rgn"]
+
         # Use temporary token to get usertoken
         url = self.get_api_url() + "/auth.do_auth"
         auth_data = {
-            "userid": response["userid"],
+            "userid": self._userid,
             "token": response["token"],
             "appkey": self._appkey,
-            "rgn": self._region,
+            "rgn": self._rgn,
         }
-        if self._userid != response["userid"]:
-            self._userid = response["userid"]
 
         send_data = json.dumps(auth_data)
         response = json.loads(await self.post_async(url, send_data, header))

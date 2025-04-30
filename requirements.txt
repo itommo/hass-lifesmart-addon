@@ -1,2 +1,4 @@
+isal
 homeassistant==2025.3.0
 ruff==0.9.8
+zlib-ng
