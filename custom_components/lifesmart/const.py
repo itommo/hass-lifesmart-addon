@@ -146,9 +146,9 @@ SUPPORTED_PLATFORMS = [
     Platform.SENSOR,
     # Platform.COVER,
     Platform.LIGHT,
-    # Platform.CLIMATE,
+    Platform.CLIMATE,
 ]
-CLIMATE_TYPES = ["V_AIR_P", "SL_CP_DN"]
+CLIMATE_TYPES = ["V_AIR_P", "SL_CP_DN", "SL_UACCB"]
 
 
 ENTITYID = "entity_id"
