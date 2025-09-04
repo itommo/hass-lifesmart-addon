@@ -176,3 +176,20 @@ This project is forked/combined from serveral projects below
 - https://github.com/skyzhishui/custom_components by @skyzhishui
 - https://github.com/Blankdlh/hass-lifesmart by @Blankdlh
 - https://github.com/likso/hass-lifesmart by @likso
+
+### VRV / Air Board (SL_UACCB) – Home Assistant support
+
+This fork adds a `climate` entity for LifeSmart Air Board (VRV).
+
+**Install**
+1. Ensure `PLATFORMS` includes `"climate"` in `custom_components/lifesmart/__init__.py`.
+2. Add `custom_components/lifesmart/climate_airboard.py` (from this repo).
+3. Restart Home Assistant.
+
+**Mapped I/O**
+- Power **P1**: type `0x81` (on) / `0x80` (off)
+- Mode **P2**: type `0xCE`, val `1=auto, 2=fan, 3=cool, 4=heat, 5=dry`
+- Setpoint **P3**: type `0x88`, val `temp*10`
+- Fan **P4**: type `0xCE`, val `15/45/75` (low/med/high)
+- Current temp **P6**: read-only, `val=temp*10`
+
