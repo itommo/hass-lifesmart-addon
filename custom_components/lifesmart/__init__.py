@@ -4,7 +4,7 @@
 - Forwards platforms including `climate`
 - Shared data store at hass.data[DOMAIN][entry_id]
 - Safe websocket/dispatcher bridge to platform entities
-- YAML import support (creates a ConfigEntry if lifesmart: present in configuration.yaml)
+- YAML import support (imports `lifesmart:` from configuration.yaml into a ConfigEntry)
 """
 from __future__ import annotations
 
@@ -16,18 +16,29 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import const as LS  # DOMAIN, keys, signal name, etc.
-from .const import DOMAIN  # convenience
-from . import generate_entity_id  # helper used by platforms to build entity_id
+from . import const as LS  # DOMAIN + keys used across the integration
+from .const import DOMAIN  # convenience alias
 
 _LOGGER = logging.getLogger(__name__)
 
+# All platforms we support (these modules must exist in custom_components/lifesmart/)
 PLATFORMS: list[str] = ["binary_sensor", "sensor", "switch", "light", "cover", "climate"]
 
+# --------------------------
+# Helpers used across modules
+# --------------------------
+def _slug(s: Any) -> str:
+    return str(s).lower().replace(":", "_").replace("@", "_")
+
+def generate_entity_id(device_type: Any, hub_id: Any, device_id: Any, sub_key: Any) -> str:
+    """Public helper: platforms import this function via `from . import generate_entity_id`."""
+    return f"{_slug(device_type)}_{_slug(hub_id)}_{_slug(device_id)}_{_slug(sub_key)}"
+
+# --------------- HA entrypoints ---------------
+
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up via YAML by importing to a ConfigEntry (optional)."""
+    """YAML setup: import into a ConfigEntry if `lifesmart:` is present."""
     if DOMAIN in config:
-        # Import YAML into a config entry once
         data = config.get(DOMAIN) or {}
         _LOGGER.debug("LifeSmart: importing YAML configuration into a ConfigEntry")
         hass.async_create_task(
@@ -37,12 +48,15 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         )
     return True
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LifeSmart from a config entry."""
     _LOGGER.debug("Setting up LifeSmart entry %s", entry.entry_id)
 
+    # Build/refresh our per-entry store
     store: Dict[str, Any] = hass.data.setdefault(DOMAIN, {}).get(entry.entry_id, {})
 
+    # Options (strings or lists accepted)
     exclude_devices = entry.options.get("exclude_devices", [])
     if isinstance(exclude_devices, str):
         exclude_devices = [x.strip() for x in exclude_devices.split(",") if x.strip()]
@@ -54,8 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if client is None:
         client = await _maybe_create_client(hass, entry)
         if client is None:
-            _LOGGER.warning("LifeSmart: client not created; platforms will still load, updates may be limited")
-
+            _LOGGER.warning("LifeSmart: client not created; continuing (platforms will still load)")
 
     devices = store.get("devices")
     if devices is None:
@@ -69,13 +82,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     _attach_ws_listener_if_possible(hass, entry, client)
+
+    # Forward all platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     _LOGGER.debug("LifeSmart entry %s setup complete", entry.entry_id)
     return True
 
+
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
+    """Unload LifeSmart config entry."""
     _LOGGER.debug("Unloading LifeSmart entry %s", entry.entry_id)
+
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     store = hass.data.get(DOMAIN, {}).get(entry.entry_id)
@@ -88,12 +106,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     return unload_ok
 
-# -------- Helpers --------
+
+# --------------- Client helpers ---------------
 
 async def _maybe_create_client(hass: HomeAssistant, entry: ConfigEntry):
-    """Create LifeSmart client using common patterns; tolerate missing client."""
+    """Create LifeSmart client using common patterns; tolerate missing client module."""
     data = entry.data or {}
     try:
+        # Pattern A: async factory
         from .client import async_create_client  # type: ignore[attr-defined]
         client = await async_create_client(hass, data, entry.options)
         _LOGGER.debug("LifeSmart: created client via async_create_client()")
@@ -102,6 +122,7 @@ async def _maybe_create_client(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.debug("LifeSmart: async_create_client not available (%s)", exc)
 
     try:
+        # Pattern B: class with optional async_connect
         from .client import LifeSmartClient  # type: ignore[attr-defined]
         client = LifeSmartClient(hass, data, entry.options)  # type: ignore[call-arg]
         if hasattr(client, "async_connect"):
@@ -112,7 +133,9 @@ async def _maybe_create_client(hass: HomeAssistant, entry: ConfigEntry):
         _LOGGER.debug("LifeSmart: LifeSmartClient not available (%s)", exc)
     return None
 
+
 async def _maybe_fetch_devices(client) -> Optional[list]:
+    """Try several method names to fetch devices."""
     if client is None:
         return None
     for attr in ("async_get_devices", "async_list_devices", "get_devices"):
@@ -127,7 +150,11 @@ async def _maybe_fetch_devices(client) -> Optional[list]:
                 _LOGGER.debug("LifeSmart: device fetch via %s failed: %s", attr, exc)
     return None
 
+
+# --------------- Websocket bridge ---------------
+
 def _attach_ws_listener_if_possible(hass: HomeAssistant, entry: ConfigEntry, client) -> None:
+    """Attach a websocket/message listener if the client exposes one."""
     if client is None:
         return
 
@@ -145,11 +172,18 @@ def _attach_ws_listener_if_possible(hass: HomeAssistant, entry: ConfigEntry, cli
                 return
 
             entity_id = generate_entity_id(device_type, hub_id, device_id, sub_key)
+
+            # If the entity isn't created/enabled yet, drop the update quietly
             if hass.states.get(entity_id) is None:
                 _LOGGER.debug("lifesmart: dropping update for unknown/disabled entity %s", entity_id)
                 return
 
-            async_dispatcher_send(hass, f"{LS.LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}", msg)
+            # Fan out to the entity via dispatcher
+            async_dispatcher_send(
+                hass,
+                f"{LS.LIFESMART_SIGNAL_UPDATE_ENTITY}_{entity_id}",
+                msg,
+            )
         except Exception as exc:
             _LOGGER.exception("lifesmart: exception in websocket handler: %s", exc)
 
@@ -167,13 +201,14 @@ def _attach_ws_listener_if_possible(hass: HomeAssistant, entry: ConfigEntry, cli
     if not bound:
         _LOGGER.debug("LifeSmart: client has no websocket callback registration; continuing without it")
 
+
 def _detach_ws_listener_if_possible(client) -> None:
+    """Detach previously attached listener."""
     if client is None:
         return
     cb = getattr(client, "_lifesmart_ws_cb", None)
     if cb is None:
         return
-
     for remover in ("remove_message_callback", "remove_listener", "off_message", "clear_message_handler"):
         if hasattr(client, remover):
             try:
