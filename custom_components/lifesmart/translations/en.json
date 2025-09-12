@@ -4,7 +4,6 @@
     "step": {
       "user": {
         "title": "LifeSmart Setup",
-        "description": "Choose how to connect to LifeSmart",
         "data": {
           "mode": "Mode"
         }
@@ -12,9 +11,11 @@
       "cloud": {
         "title": "LifeSmart Cloud",
         "data": {
+          "region": "Server Region",
           "app_key": "App Key",
           "token": "Token",
-          "user_id": "User ID"
+          "user_id": "User ID",
+          "password": "Password (optional)"
         }
       },
       "local": {
