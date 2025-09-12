@@ -1,7 +1,7 @@
 {
   "domain": "lifesmart",
   "name": "LifeSmart Plus VRV",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "documentation": "https://github.com/itommo/hass-lifesmart-plusVRV",
   "codeowners": [
     "@itommo"
@@ -11,5 +11,6 @@
   "loggers": [
     "custom_components.lifesmart"
   ],
-  "requirements": []
+  "requirements": [],
+  "config_flow": true
 }
