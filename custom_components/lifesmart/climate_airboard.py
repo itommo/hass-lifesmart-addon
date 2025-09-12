@@ -32,7 +32,7 @@ from homeassistant.components.climate.const import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
+from homeassistant.const import UnitOfTemperature, ATTR_TEMPERATURE
 
 from .const import DOMAIN
 
@@ -100,7 +100,7 @@ class LifeSmartAirBoard(ClimateEntity):
         | ClimateEntityFeature.TURN_ON
         | ClimateEntityFeature.TURN_OFF
     )
-    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_temperature_unit = UnitOfTemperature
     _attr_min_temp = 16
     _attr_max_temp = 30
     _attr_precision = 0.5
