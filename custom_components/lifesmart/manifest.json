@@ -1,13 +1,15 @@
 {
   "domain": "lifesmart",
-  "name": "LifeSmart",
-  "codeowners": ["@iKaew"],
-  "config_flow": true,
-  "dependencies": [],
-  "documentation": "https://github.com/iKaew/hass-lifesmart-addon",
-  "integration_type": "hub",
+  "name": "LifeSmart Plus VRV",
+  "version": "0.2.0",
+  "documentation": "https://github.com/itommo/hass-lifesmart-plusVRV",
+  "codeowners": [
+    "@itommo"
+  ],
   "iot_class": "cloud_push",
-  "issue_tracker": "https://github.com/iKaew/hass-lifesmart-addon/issues",
-  "requirements": ["websocket-client"],
-  "version": "0.1.0"
+  "integration_type": "hub",
+  "loggers": [
+    "custom_components.lifesmart"
+  ],
+  "requirements": []
 }
