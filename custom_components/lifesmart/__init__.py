@@ -9,6 +9,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from . import const as LS
 from .const import DOMAIN
 
+# Re-export so legacy modules can do: from . import LifeSmartDevice, generate_entity_id
+from .device import LifeSmartDevice, generate_entity_id  # <-- THIS IS THE IMPORTANT PART
+
 _LOGGER = logging.getLogger(__name__)
 
 POTENTIAL_PLATFORMS: List[str] = ["binary_sensor", "sensor", "switch", "light", "cover", "climate"]
