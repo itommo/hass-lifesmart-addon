@@ -1,174 +1,43 @@
 {
+  "title": "LifeSmart Plus VRV",
   "config": {
-    "flow_title": "{name}",
     "step": {
       "user": {
-        "title": "LifeSmart Integration Setup",
-        "description": "Enter LifeSmart Platform credential and User details.",
+        "title": "LifeSmart Setup",
+        "description": "Choose how to connect to LifeSmart",
         "data": {
-          "appkey": "App Key",
-          "apptoken": "App Token",
-          "userpassword": "User Password",
-          "userid": "User Id",
-          "region": "LifeSmart regional server",
-          "exclude": "List of device to be excluded",
-          "exclude_agt": "List of hub to be excluded",
-          "ai_include_agt": "List of hub to be included in Scene",
-          "ai_include_me": "List of device to be included in Scene"
+          "mode": "Mode"
+        }
+      },
+      "cloud": {
+        "title": "LifeSmart Cloud",
+        "data": {
+          "app_key": "App Key",
+          "token": "Token",
+          "user_id": "User ID"
+        }
+      },
+      "local": {
+        "title": "LifeSmart Local",
+        "data": {
+          "host": "Host/IP",
+          "port": "Port",
+          "username": "Username",
+          "password": "Password"
         }
       }
     },
     "abort": {
-      "already_in_progress": "Configuration is already in progress.",
-      "already_configured": "This device is already configured."
-    },
-    "error": {
+      "single_instance_allowed": "This integration is already configured."
     }
   },
   "options": {
     "step": {
-      "user": {
-        "title": "LifeSmart Integration Setup",
-        "description": "Enter LifeSmart Platform credential and User details.",
+      "init": {
+        "title": "LifeSmart options",
         "data": {
-          "appkey": "App Key",
-          "apptoken": "App Token",
-          "userpassword": "User Password",
-          "userid": "User Id",
-          "region": "LifeSmart regional server",
-          "exclude": "List of device to be excluded",
-          "exclude_agt": "List of hub to be excluded",
-          "ai_include_agt": "List of hub to be included in Scene",
-          "ai_include_me": "List of device to be included in Scene"
-        }
-      },
-      "main_params": {
-        "title": "LifeSmart Integration Options",
-        "description": "Enter LifeSmart Platform credential and User details.",
-        "data": {
-          "appkey": "App Key",
-          "apptoken": "App Token",
-          "userpassword": "User Password",
-          "userid": "User Id",
-          "region": "LifeSmart regional server",
-          "exclude": "List of device to be excluded",
-          "exclude_agt": "List of hub to be excluded",
-          "ai_include_agt": "List of hub to be included in Scene",
-          "ai_include_me": "List of device to be included in Scene"
-        }
-      }
-    }
-  },
-  "services": {
-    "send_ir_code": {
-      "name": "Send IR Codes",
-      "description": "Send IR code to remote device",
-      "fields": {
-        "device_id": {
-          "name": "Device Id",
-          "description": "Device Id (me)."
-        },
-        "hub_id": {
-          "name": "AGT",
-          "description": "Hub Id (agt)."
-        },
-        "ir_code": {
-          "name": "IR Code",
-          "description": "IR Code data"
-        }
-      }
-    },
-    "send_keys": {
-      "name": "Send Keys",
-      "description": "Send IR keys to remote device",
-      "fields": {
-        "me": {
-          "name": "Me",
-          "description": "Sub device Id."
-        },
-        "agt": {
-          "name": "AGT",
-          "description": "Hub device Id."
-        },
-        "ai": {
-          "name": "Remote Id",
-          "description": "Remote device Id."
-        },
-        "category": {
-          "name": "Category",
-          "description": "Target device category."
-        },
-        "brand": {
-          "name": "Brand",
-          "description": "Target device brand."
-        },
-        "keys": {
-          "name": "Keys",
-          "description": "Command key to be sent."
-        }
-      }
-    },
-    "send_ackeys": {
-      "name": "Send A/C Keys",
-      "description": "Send IR keys to A/C device",
-      "fields": {
-        "me": {
-          "name": "Me",
-          "description": "Sub device Id."
-        },
-        "agt": {
-          "name": "AGT",
-          "description": "Hub device Id."
-        },
-        "ai": {
-          "name": "Remote Id",
-          "description": "Remote device Id."
-        },
-        "category": {
-          "name": "Category",
-          "description": "Target device category."
-        },
-        "brand": {
-          "name": "Brand",
-          "description": "Target device brand."
-        },
-        "keys": {
-          "name": "Keys",
-          "description": "Command key to be sent."
-        },
-        "power": {
-          "name": "Power On/Off",
-          "description": "Power on = 1, off = 0"
-        },
-        "mode": {
-          "name": "Mode",
-          "description": "Mode."
-        },
-        "temp": {
-          "name": "Temperature",
-          "description": "Temperature to be set."
-        },
-        "wind": {
-          "name": "Wind Level",
-          "description": "Wind Level."
-        },
-        "swing": {
-          "name": "Swing Mode",
-          "description": "Swing mode."
-        }
-      }
-    },
-    "scene_set": {
-      "name": "Scene Set",
-      "description": "Set scene to remote device",
-      "fields": {
-        "agt": {
-          "name": "AGT",
-          "description": "Hub device Id."
-        },
-        "id": {
-          "name": "Scene Id",
-          "description": "Remote Scene Id."
+          "exclude_devices": "Exclude device IDs (comma-separated)",
+          "exclude_hubs": "Exclude hub IDs (comma-separated)"
         }
       }
     }
