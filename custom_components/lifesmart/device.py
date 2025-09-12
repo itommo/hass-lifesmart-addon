@@ -11,18 +11,17 @@ def generate_entity_id(device_type: Any, hub_id: Any, device_id: Any, sub_key: A
     return f"{_slug(device_type)}_{_slug(hub_id)}_{_slug(device_id)}_{_slug(sub_key)}"
 
 class LifeSmartDevice:
-    """Lightweight base so platform files can import safely."""
+    """Lightweight base; safe even if client is missing."""
     def __init__(self, raw_device: dict, client: Any, *_, **__) -> None:
         self._raw = raw_device
         self._client = client
         self._attributes: dict[str, Any] = {}
 
     async def async_lifesmart_epset(self, code: str, value: Any, key: str) -> int:
-        """Best-effort setter; won’t crash if client methods are absent."""
         if not self._client:
             _LOGGER.debug("LifeSmartDevice: no client; epset(%s,%s,%s) ignored", code, value, key)
             return 0
-        for name in ("async_epset", "async_set", "epset", "set", "async_send", "send"):
+        for name in ("async_epset","async_set","epset","set","async_send","send"):
             if hasattr(self._client, name):
                 try:
                     fn = getattr(self._client, name)
