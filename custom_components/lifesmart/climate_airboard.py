@@ -33,6 +33,12 @@ from homeassistant.components.climate.const import (
     HVACMode,
 )
 from homeassistant.const import UnitOfTemperature, ATTR_TEMPERATURE
+from homeassistant.const import PRECISION_HALVES  # add this import
+
+# ...
+_attr_temperature_unit = UnitOfTemperature.CELSIUS
+_attr_precision = PRECISION_HALVES
+
 
 from .const import DOMAIN
 
