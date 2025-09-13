@@ -38,7 +38,8 @@
         "title": "LifeSmart options",
         "data": {
           "exclude_devices": "Exclude device IDs (comma-separated)",
-          "exclude_hubs": "Exclude hub IDs (comma-separated)"
+          "exclude_hubs": "Exclude hub IDs (comma-separated)",
+          "inject_dummy": "Inject dummy AirBoard device for testing"
         }
       }
     }
