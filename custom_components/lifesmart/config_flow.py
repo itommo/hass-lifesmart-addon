@@ -1,10 +1,13 @@
 from __future__ import annotations
+
 import logging
 from typing import Any, Dict, Optional
+
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.core import callback
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,7 +23,7 @@ class LifeSmartConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await (self.async_step_cloud() if self._mode == "cloud" else self.async_step_local())
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
-        schema = vol.Schema({vol.Required("mode", default="cloud"): vol.In(["cloud", "local"])})
+        schema = vol.Schema({vol.Required("mode", default="cloud"): vol.In(["cloud", "local"]) })
         return self.async_show_form(step_id="user", data_schema=schema)
 
     async def async_step_import(self, user_input: Dict[str, Any]) -> FlowResult:
@@ -66,11 +69,18 @@ class LifeSmartConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class LifeSmartOptionsFlow(config_entries.OptionsFlow):
     def __init__(self, entry: config_entries.ConfigEntry) -> None:
         self.entry = entry
+
     async def async_step_init(self, user_input: Dict[str, Any] | None = None) -> FlowResult:
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
+
+        default_exclude_devices = self.entry.options.get("exclude_devices", "")
+        default_exclude_hubs = self.entry.options.get("exclude_hubs", "")
+        default_inject_dummy = bool(self.entry.options.get("inject_dummy", False))
+
         schema = vol.Schema({
-            vol.Optional("exclude_devices", default=self.entry.options.get("exclude_devices", "")): str,
-            vol.Optional("exclude_hubs", default=self.entry.options.get("exclude_hubs", "")): str,
+            vol.Optional("exclude_devices", default=default_exclude_devices): str,
+            vol.Optional("exclude_hubs", default=default_exclude_hubs): str,
+            vol.Optional("inject_dummy", default=default_inject_dummy): bool,
         })
         return self.async_show_form(step_id="init", data_schema=schema)

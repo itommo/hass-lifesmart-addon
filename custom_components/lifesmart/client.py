@@ -5,19 +5,20 @@ async def async_create_client(hass, data: dict, options: dict) -> Any:
     return DummyClient()
 
 class DummyClient:
-    """Returns a hard-coded device for sanity checks."""
     async def async_get_devices(self) -> list[dict]:
-        # Minimal shape: device dict with keys your platform expects
         return [{
-            "devtype": "V_AIR_P",    # so climate fallback can attach
-            "name": "Dummy VRV",
-            "agt": "HUB123456",
-            "me": "DEV001",
-            "data": { "O": {"type":1}, "MODE":{"val":1}, "T":{"v":24}, "tT":{"v":22}, "F":{"val":45} },
-            "ver": "debug",
-            "id": "DEV001", "hub": "HUB123456"
+            "devtype": "SL_UACCB",
+            "name": "Dummy AirBoard",
+            "agt": "HUB1234567890",
+            "me": "DEV0001",
+            "data": {
+                "P1": {"type": 0x81},
+                "P2": {"val": 3},
+                "P3": {"val": 240},
+                "P4": {"val": 45},
+                "P6": {"val": 250}
+            },
+            "ver": "debug", "id": "DEV0001", "hub": "HUB1234567890"
         }]
-
-    # Optional message subscription hooks used by the bridge (no-op here)
     def add_message_callback(self, cb): pass
     def remove_message_callback(self, cb): pass

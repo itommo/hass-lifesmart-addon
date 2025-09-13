@@ -1,92 +1,20 @@
-"""LifeSmart climate (VRV/thermostat) with modern entrypoint."""
 from __future__ import annotations
-import logging, time
-from typing import Any
+import logging
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
-from homeassistant.components.climate.const import FAN_HIGH, FAN_LOW, FAN_MEDIUM, ClimateEntityFeature, HVACMode
-from homeassistant.const import PRECISION_WHOLE, UnitOfTemperature
-from . import LifeSmartDevice  # provided by your integration
 
 _LOGGER = logging.getLogger(__name__)
 
 try:
-    from .climate_airboard import async_setup_entry as _airboard_setup_entry  # type: ignore
+    from .climate_airboard import async_setup_entry as _airboard_setup_entry
 except Exception as exc:
-    _LOGGER.error("lifesmart.climate: failed to import climate_airboard: %s", exc)
+    _LOGGER.error("lifesmart.climate: climate_airboard import failed: %s", exc)
     _airboard_setup_entry = None
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     if _airboard_setup_entry is None:
-        _LOGGER.error("lifesmart.climate: climate_airboard not available; cannot set up climate")
+        _LOGGER.error("lifesmart.climate: no climate_airboard; nothing to set up")
         return
+    _LOGGER.info("lifesmart.climate: delegating to climate_airboard")
     await _airboard_setup_entry(hass, entry, async_add_entities)
-
-# Legacy fallback (optional)
-LIFESMART_STATE_LIST = [HVACMode.OFF, HVACMode.AUTO, HVACMode.FAN_ONLY, HVACMode.COOL, HVACMode.HEAT, HVACMode.DRY]
-LIFESMART_STATE_LIST2 = [HVACMode.OFF, HVACMode.HEAT]
-FAN_MODES = [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
-GET_FAN_SPEED = {FAN_LOW: 15, FAN_MEDIUM: 45, FAN_HIGH: 76}
-AIR_TYPES = ["V_AIR_P"]
-THER_TYPES = ["SL_CP_DN"]
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    if discovery_info is None: return
-    dev = discovery_info.get("dev"); param = discovery_info.get("param")
-    if not dev: return
-    cdata = dev.get("data", {})
-    if "T" not in cdata and "P3" not in cdata: return
-    async_add_entities([LifeSmartClimateDevice(dev, "idx", "0", param)])
-
-class LifeSmartClimateDevice(LifeSmartDevice, ClimateEntity):
-    def __init__(self, dev, idx, val, param):
-        super().__init__(dev, idx, val, param)
-        self._name = dev["name"]; self._devtype = dev.get("devtype"); cdata = dev.get("data", {})
-        self.entity_id = ENTITY_ID_FORMAT.format((dev["devtype"] + "_" + dev["agt"][:-3] + "_" + dev["me"]).lower().replace(":", "_").replace("@", "_"))
-        self._attributes = getattr(self, "_attributes", {})
-        self._current_temperature = None; self._target_temperature = None; self._min_temp = 5; self._max_temp = 35; self._fanspeed = 0
-        if self._devtype in AIR_TYPES:
-            self._modes = LIFESMART_STATE_LIST
-            if cdata.get("O", {}).get("type", 0) % 2 == 0: self._mode = LIFESMART_STATE_LIST[0]
-            else: self._mode = LIFESMART_STATE_LIST[cdata.get("MODE", {}).get("val", 0)]
-            self._attributes.update({"last_mode": self._mode})
-            self._current_temperature = cdata.get("T", {}).get("v"); self._target_temperature = cdata.get("tT", {}).get("v")
-            self._min_temp = 10; self._max_temp = 35; self._fanspeed = cdata.get("F", {}).get("val", 0)
-        else:
-            self._modes = LIFESMART_STATE_LIST2
-            if cdata.get("P1", {}).get("type", 0) % 2 == 0: self._mode = LIFESMART_STATE_LIST2[0]
-            else: self._mode = LIFESMART_STATE_LIST2[1]
-            self._attributes.setdefault("Heating", "true" if cdata.get("P2", {}).get("type", 0) % 2 else "false")
-            self._current_temperature = (cdata.get("P4", {}).get("val", 0)) / 10; self._target_temperature = (cdata.get("P3", {}).get("val", 0)) / 10
-    @property
-    def unique_id(self): return self.entity_id
-    @property
-    def precision(self): return PRECISION_WHOLE
-    @property
-    def temperature_unit(self): return UnitOfTemperature.CELSIUS
-    @property
-    def target_temperature_step(self): return 1
-    @property
-    def fan_mode(self):
-        s = int(self._fanspeed or 0); 
-        return FAN_LOW if s < 30 else FAN_MEDIUM if s < 65 else FAN_HIGH
-    @property
-    def fan_modes(self): return FAN_MODES
-    async def async_set_temperature(self, **kwargs: Any):
-        new = int(float(kwargs["temperature"]) * 10)
-        if self._devtype in AIR_TYPES: await super().async_lifesmart_epset("0x88", new, "tT")
-        else: await super().async_lifesmart_epset("0x88", new, "P3")
-    async def async_set_fan_mode(self, fan_mode): await super().async_lifesmart_epset("0xCE", GET_FAN_SPEED[fan_mode], "F")
-    async def async_set_hvac_mode(self, hvac_mode):
-        if self._devtype in AIR_TYPES:
-            if hvac_mode == HVACMode.OFF: await super().async_lifesmart_epset("0x80", 0, "O"); return
-            if getattr(self, "_mode", HVACMode.OFF) == HVACMode.OFF:
-                if await super().async_lifesmart_epset("0x81", 1, "O") == 0: time.sleep(2)
-                else: return
-            await super().async_lifesmart_epset("0xCE", LIFESMART_STATE_LIST.index(hvac_mode), "MODE")
-        elif hvac_mode == HVACMode.OFF:
-            await super().async_lifesmart_epset("0x80", 0, "P1"); time.sleep(1); await super().async_lifesmart_epset("0x80", 0, "P2")
-        else:
-            if await super().async_lifesmart_epset("0x81", 1, "P1") == 0: time.sleep(2)

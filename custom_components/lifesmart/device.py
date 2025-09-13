@@ -11,7 +11,6 @@ def generate_entity_id(device_type: Any, hub_id: Any, device_id: Any, sub_key: A
     return f"{_slug(device_type)}_{_slug(hub_id)}_{_slug(device_id)}_{_slug(sub_key)}"
 
 class LifeSmartDevice:
-    """Lightweight base; safe even if client is missing."""
     def __init__(self, raw_device: dict, client: Any, *_, **__) -> None:
         self._raw = raw_device
         self._client = client
@@ -21,7 +20,7 @@ class LifeSmartDevice:
         if not self._client:
             _LOGGER.debug("LifeSmartDevice: no client; epset(%s,%s,%s) ignored", code, value, key)
             return 0
-        for name in ("async_epset","async_set","epset","set","async_send","send"):
+        for name in ("async_epset", "async_set", "epset", "set", "async_send", "send"):
             if hasattr(self._client, name):
                 try:
                     fn = getattr(self._client, name)
